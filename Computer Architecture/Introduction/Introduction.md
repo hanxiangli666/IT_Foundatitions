@@ -103,5 +103,3 @@ Further reading and references
 <CardGroup>
   <Card title="Watch Video" icon="video" cta="Learn more" href="https://learn.kodekloud.com/user/courses/computer-architecture/module/960b647b-9129-4f10-ac03-7f598a5ca09f/lesson/10a5b425-c045-4ed2-b1cb-8ddcf45c2530" />
 </CardGroup>
-
-Built with [Mintlify](https://mintlify.com).

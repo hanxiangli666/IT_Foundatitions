@@ -1,129 +1,135 @@
-# CPU FDE Cycle
+# CPU FDE Cycle / CPU 取指-译码-执行循环
 
-> Overview of CPU fundamentals including binary and transistors, von Neumann architecture, fetch decode execute cycle, ALU and control unit, memory hierarchy, clock speed and performance trade offs
+> 中文：这是一份中英文对照的 CPU 工作原理笔记，重点解释二进制、机器码、冯·诺依曼结构，以及 CPU 为什么要不断重复取指、译码和执行。
+>
+> English: This is a bilingual note on how the CPU works, focused on binary, machine code, the von Neumann model, and why the CPU continuously repeats fetch, decode, and execute.
 
-But all this is making you wonder: how is all this possible?
+## 1. 从二进制开始 / Starting with Binary
 
-It starts with the transistor and how many transistors are arranged inside a CPU. At the lowest level a CPU only understands binary: patterns of ones and zeros. Everything—numbers, text, images, even this lesson—is ultimately encoded as binary. When those binary patterns conform to the CPU's instruction format, they become machine code: the exact bit patterns the processor can execute.
+中文：CPU 的底层只认识二进制，也就是 0 和 1。晶体管像微型开关，只能表示开或关，所以所有信息最终都要变成二进制形式。数字、文字、图片、视频，甚至这份笔记，最终都要以二进制数据存在于硬件里。
 
-Why binary? A transistor inside a CPU behaves like a tiny electronic switch: it can be on or off, representing `1` or `0` respectively. Humans prefer expressive, high-level languages. To bridge that gap we use tools:
+English: At the lowest level, the CPU understands only binary: 0s and 1s. Transistors behave like tiny switches and can only represent on or off, so all information must eventually become binary. Numbers, text, images, video, and even this note ultimately exist as binary data inside hardware.
 
-* A compiler translates high-level code (C, Rust, Go, etc.) into machine code.
-* An assembler converts human-readable assembly into machine code.
+中文：当二进制模式符合 CPU 的指令格式时，它们就变成机器码。机器码是 CPU 真正执行的指令，是硬件能直接读懂的最底层语言。
 
-Both produce the binary instruction stream that the CPU executes.
+English: When a binary pattern matches the CPU’s instruction format, it becomes machine code. Machine code is what the CPU actually executes, and it is the lowest-level language the hardware can directly understand.
 
-At the next level, the CPU's architecture coordinates how execution occurs. The classic conceptual model is the von Neumann architecture, which organizes the processor into three primary parts: the control unit, the ALU (arithmetic logic unit), and memory. Modern CPUs often add optimizations such as separate instruction and data caches (a Harvard-style optimization) for better performance, but the von Neumann model remains a useful mental model.
+---
 
-![1774750119361](image/CPUFDECycle/1774750119361.png)
+## 2. 高级语言如何变成机器码 / How High-Level Languages Become Machine Code
 
-<Frame>
-    <img src="https://mintcdn.com/kodekloud-c4ac6d9a/k9suVL7cFPUhhb5j/images/Computer-Architecture/Central-Processing-Unit-CPU/CPU-FDE-Cycle/von-neumann-cpu-alu-memory-slide.jpg?fit=max&auto=format&n=k9suVL7cFPUhhb5j&q=85&s=2d282e1636fd814867fa709151cf4a2f" alt="A presentation slide illustrating the Von Neumann architecture with a large CPU graphic and labeled components—Control Unit, ALU (Arithmetic Logic Unit) and Memory—plus a small diagram of mathematics and logic operations. On the right, a presenter stands speaking in front of the slide." width="1920" height="1080" data-path="images/Computer-Architecture/Central-Processing-Unit-CPU/CPU-FDE-Cycle/von-neumann-cpu-alu-memory-slide.jpg" />
-</Frame>
+中文：人类更喜欢高级语言，因为它们更清晰、更接近思维方式。编译器会把 C、Rust、Go 等语言转换成机器码；汇编器会把汇编语言转换成机器码。无论是哪种方式，最后都会得到 CPU 可执行的二进制指令流。
 
-* The control unit orchestrates the processor: it fetches instructions and signals which parts should act.
-* The ALU performs arithmetic (addition, subtraction, increment) and logic operations (AND, OR, comparisons).
-* Memory holds both instructions and data across multiple levels: registers (smallest, fastest), caches (L1/L2/L3), and RAM (larger, slower).
+English: Humans prefer high-level languages because they are clearer and closer to how we think. A compiler translates languages like C, Rust, or Go into machine code; an assembler translates assembly language into machine code. Either way, the end result is a binary instruction stream the CPU can execute.
 
-CPUs transfer data with memory and peripherals (keyboard, display, disk) using buses and memory-mapped I/O. All of this activity is driven by a repeating sequence known as the fetch–decode–execute (FDE) cycle.
+![Binary and machine code](image/CPUFDECycle/1774750119361.png)
 
-![1774750128976](image/CPUFDECycle/1774750128976.png)
+中文：这也意味着 CPU 并不“理解”高级语言本身。高级语言只是给人看的，机器真正执行的是编译后或汇编后的指令。
 
-<Frame>
-    <img src="https://mintcdn.com/kodekloud-c4ac6d9a/k9suVL7cFPUhhb5j/images/Computer-Architecture/Central-Processing-Unit-CPU/CPU-FDE-Cycle/von-neumann-architecture-cpu-memory-diagram.jpg?fit=max&auto=format&n=k9suVL7cFPUhhb5j&q=85&s=e29f15bb33b40029d9fba2646ff91622" alt="A stylized slide illustrating the Von Neumann architecture, showing a CPU with labeled Control Unit and ALU on the left and a Memory block (with register, cache, RAM) plus Input (keyboard) and Output (monitor) on the right. The design uses dark purple/gradient colors and a brain icon above the Memory block." width="1920" height="1080" data-path="images/Computer-Architecture/Central-Processing-Unit-CPU/CPU-FDE-Cycle/von-neumann-architecture-cpu-memory-diagram.jpg" />
-</Frame>
+English: This also means the CPU does not understand high-level languages directly. High-level languages are for humans; the machine executes only the compiled or assembled instructions.
 
-The FDE cycle runs continuously, synchronized by the CPU clock. In brief:
+---
 
-* Fetch: read the next instruction from memory (often from cache) using the program counter (PC).
-* Decode: interpret the instruction bits to determine the operation and which operands (registers or memory) to use.
-* Execute: perform the operation in the ALU or other execution units, then write results back to registers or memory.
-* ![1774750138321](image/CPUFDECycle/1774750138321.png)
+## 3. 冯·诺依曼模型 / The Von Neumann Model
 
-<Frame>
-    <img src="https://mintcdn.com/kodekloud-c4ac6d9a/k9suVL7cFPUhhb5j/images/Computer-Architecture/Central-Processing-Unit-CPU/CPU-FDE-Cycle/von-neumann-architecture-fetch-decode-execute.jpg?fit=max&auto=format&n=k9suVL7cFPUhhb5j&q=85&s=6cb57e1e7b5f2f3fc9ee8235e385e2f1" alt="A presenter stands to the right of a slide titled "Von Neumann Architecture" that shows a flow diagram (Fetch → Decode → Execute) with labeled blocks for Control Unit, ALU, and Memory and a stylized CPU graphic." width="1920" height="1080" data-path="images/Computer-Architecture/Central-Processing-Unit-CPU/CPU-FDE-Cycle/von-neumann-architecture-fetch-decode-execute.jpg" />
-</Frame>
+中文：经典的冯·诺依曼模型把 CPU 看成由控制单元、ALU 和存储系统组成。控制单元负责安排顺序和调度，ALU 负责算术与逻辑操作，存储负责保存指令和数据。现代 CPU 往往会加上更复杂的优化，但这个模型仍然很适合作为入门心智模型。
 
-To make the FDE cycle more intuitive, consider the "Motherboard" restaurant analogy:
+English: The classic von Neumann model describes the CPU as consisting of a control unit, an ALU, and a memory system. The control unit manages order and coordination, the ALU handles arithmetic and logic operations, and memory stores instructions and data. Modern CPUs add far more optimizations, but this model is still a very useful mental foundation.
 
-* Customer places an order → user input.
-* Fetch: the server (control unit) takes the order to the counter (memory).
-* Decode: the server reads the order and tells the chef (ALU) what to prepare; the chef gathers ingredients (data) from the pantry (RAM) to the worktop (registers/cache).
-* Execute: the chef prepares the dish (performs computation), places it on the counter (writes result back to memory/register), and the server delivers it to the customer (output).
+![Von Neumann architecture](image/CPUFDECycle/1774750128976.png)
 
-This maps directly to how a CPU fetches an instruction, decodes which hardware units are needed, and executes operations on data stored in registers or loaded from RAM.
+中文：控制单元像指挥官，决定下一步做什么；ALU 像计算工具，负责加减、比较和逻辑运算；内存则像工作区，保存当前任务所需的数据和指令。
 
-Now see the analogy applied to a concrete example: a program that computes `2 + 2`.
+English: The control unit is like a commander deciding the next step; the ALU is like a calculation tool for addition, subtraction, comparison, and logic operations; and memory is like the workspace holding the data and instructions needed right now.
 
-![1774750145064](image/CPUFDECycle/1774750145064.png)
+---
 
-<Frame>
-    <img src="https://mintcdn.com/kodekloud-c4ac6d9a/k9suVL7cFPUhhb5j/images/Computer-Architecture/Central-Processing-Unit-CPU/CPU-FDE-Cycle/motherboard-diagram-components-add-two-presenter.jpg?fit=max&auto=format&n=k9suVL7cFPUhhb5j&q=85&s=659326ea7b7bd09a3d25558a2831841c" alt="An illustrated, stylized motherboard diagram showing components like CPU, RAM, storage and labelled ports with a "Simple Program" popup and a "2 + 2 Add two numbers" arrow. A presenter in a KodeKloud T-shirt stands on the right, gesturing as if explaining the diagram." width="1920" height="1080" data-path="images/Computer-Architecture/Central-Processing-Unit-CPU/CPU-FDE-Cycle/motherboard-diagram-components-add-two-presenter.jpg" />
-</Frame>
+## 4. FDE 循环 / The Fetch-Decode-Execute Cycle
 
-Execution steps for `2 + 2`:
+中文：CPU 的基本工作循环叫做 FDE，也就是 Fetch、Decode、Execute。这个循环不停重复，由 CPU 时钟驱动，每一拍都推动处理器前进一点点。
 
-* The program binary is stored on disk. When launched, the OS loads it into RAM for faster access.
-* The FDE cycle begins, driven by the CPU clock:
-  * Fetch: the control unit fetches the next instruction (e.g., `ADD R1, R2, R3`) from memory using the program counter, placing it into the instruction register.
-  * Decode: the control unit decodes the bits, determining it is an `ADD` operation and where the operands `R2` and `R3` are located.
-  * Execute: the ALU adds the values (for `2 + 2`) loaded into registers and writes the result (`4`) into the destination register or back to memory.
-* The result may then be used by subsequent instructions or sent to an output device (display).
-* ![1774750152344](image/CPUFDECycle/1774750152344.png)
+English: The CPU’s basic work loop is called FDE: Fetch, Decode, Execute. This cycle repeats continuously and is driven by the CPU clock, with each tick moving the processor forward a little bit.
 
-<Frame>
-    <img src="https://mintcdn.com/kodekloud-c4ac6d9a/k9suVL7cFPUhhb5j/images/Computer-Architecture/Central-Processing-Unit-CPU/CPU-FDE-Cycle/kodekloud-presenter-cpu-diagram-ports-clock.jpg?fit=max&auto=format&n=k9suVL7cFPUhhb5j&q=85&s=81ead56cd6e8dcf92b2344d0e7a30ca6" alt="A presenter wearing a KodeKloud t-shirt stands on the right while a stylized tech illustration on the left shows a motherboard/CPU diagram with ALU, RAM, binary code, and a fetch-decode-execute flow. The graphic also includes ports (VGA, HDMI, USB) and a clock-speed gauge." width="1920" height="1080" data-path="images/Computer-Architecture/Central-Processing-Unit-CPU/CPU-FDE-Cycle/kodekloud-presenter-cpu-diagram-ports-clock.jpg" />
-</Frame>
+![Fetch decode execute](image/CPUFDECycle/1774750138321.png)
 
-The CPU repeats this tiny sequence billions of times per second. The internal clock sets the rhythm: each tick advances the cycle. Clock speed, measured in gigahertz (GHz), indicates how many clock cycles occur per second.
+### Fetch / 取指
 
-What changes if you increase the clock speed? Think of giving the chef an espresso—tasks complete faster. In CPU terms that is overclocking. Overclocking raises performance at the cost of:
+中文：取指就是从内存中读取下一条指令，通常通过程序计数器 PC 指向下一条要执行的内容。CPU 往往会先从缓存中找，如果缓存命中，就能更快拿到指令。
 
-* Increased power consumption
-* More heat generation
-* The need for better cooling
-* Potential instability if thermal, electrical, or timing limits are exceeded
+English: Fetch means reading the next instruction from memory, usually using the program counter, or PC, to point to what should be executed next. The CPU often checks cache first, and if the instruction is found there, it can be retrieved faster.
 
-<Callout icon="warning" color="#FF6B6B">
-  Overclocking can permanently damage hardware and void warranties. Ensure adequate cooling and stability testing before attempting higher clock speeds.
-</Callout>
+### Decode / 译码
 
-Quick recap — key CPU concepts:
+中文：译码就是分析指令位模式，确定这条指令是什么操作，需要哪些操作数，应该使用哪些寄存器或内存位置。控制单元在这一步发挥核心作用。
 
-| Concept                     | Role / Explanation                              | Example / Note                                   |
-| --------------------------- | ----------------------------------------------- | ------------------------------------------------ |
-| Control Unit                | Orchestrates instruction flow (fetch & decode)  | Manages program counter and instruction register |
-| ALU (Arithmetic Logic Unit) | Performs arithmetic and logic operations        | `ADD`, `SUB`, `AND`, `OR`, comparisons   |
-| Memory Hierarchy            | Registers → Cache (L1/L2/L3) → RAM → Storage | Faster, smaller to slower, larger                |
-| Machine Code                | Binary instructions the CPU executes            | Produced by compilers/assemblers                 |
-| Clock Speed                 | Number of cycles per second (`GHz`)           | Higher => faster but more heat                   |
-| Cores & Threads             | Parallel execution units                        | Multi-core CPUs run multiple tasks concurrently  |
+English: Decode means analyzing the instruction bits to determine what operation it is, what operands are needed, and which registers or memory locations should be used. The control unit plays the key role in this step.
 
-<Callout icon="lightbulb" color="#1CB2FE">
-  Tip: To learn more about the von Neumann model and modern CPU optimizations (pipelines, caches, and out-of-order execution), see the [Von Neumann architecture](https://en.wikipedia.org/wiki/Von_Neumann_architecture) and [CPU caching](https://en.wikipedia.org/wiki/CPU_cache) resources.
-</Callout>
+### Execute / 执行
 
-Final summary:
+中文：执行就是让 ALU 或其他执行单元真正完成工作，比如加法、逻辑判断、数据搬运或跳转。结果会被写回寄存器或内存，供下一步继续使用。
 
-* Modern CPUs are built from billions of transistors that implement binary logic.
-* CPUs execute machine code produced by compilers and assemblers.
-* The fetch–decode–execute cycle (FDE) is the fundamental loop that runs on every core.
-* The CPU clock determines the pace of execution; higher clock speeds increase throughput but also increase heat and power use.
-* Multi-core CPUs and threading enable parallel execution for better performance.
+English: Execute means letting the ALU or another execution unit actually do the work, such as arithmetic, logical comparisons, data movement, or branching. The result is written back to registers or memory for later use.
 
-  ![1774750167154](image/CPUFDECycle/1774750167154.png)
+---
 
-<Frame>
-    <img src="https://mintcdn.com/kodekloud-c4ac6d9a/k9suVL7cFPUhhb5j/images/Computer-Architecture/Central-Processing-Unit-CPU/CPU-FDE-Cycle/kodekloud-cpu-summary-slide-presenter.jpg?fit=max&auto=format&n=k9suVL7cFPUhhb5j&q=85&s=8b1c80a111d2857f8cdce31e00c167cd" alt="A dark presentation slide titled "Summary" showing five purple boxes with brief CPU points (cores/threads, machine code, internal clock, gigahertz, cooling). On the right, a man in a black T-shirt with a KodeKloud logo gestures as he presents." width="1920" height="1080" data-path="images/Computer-Architecture/Central-Processing-Unit-CPU/CPU-FDE-Cycle/kodekloud-cpu-summary-slide-presenter.jpg" />
-</Frame>
+## 5. 生活类比 / A Restaurant Analogy
 
-Links and References
+中文：你可以把 FDE 循环想成餐厅流程。顾客下单相当于输入；服务员去取订单相当于取指；服务员读懂订单相当于译码；厨师开始烹饪相当于执行；最后把餐点送回顾客手里，相当于输出。
 
-* [Von Neumann architecture — Wikipedia](https://en.wikipedia.org/wiki/Von_Neumann_architecture)
-* [CPU cache — Wikipedia](https://en.wikipedia.org/wiki/CPU_cache)
-* [Compiler — Wikipedia](https://en.wikipedia.org/wiki/Compiler)
-* [Assembler — Wikipedia](https://en.wikipedia.org/wiki/Assembler)
+English: You can think of the FDE cycle as a restaurant workflow. The customer placing an order is input; the server fetching the order is fetch; the server reading the order is decode; the chef cooking is execute; and delivering the dish back to the customer is output.
 
-<CardGroup>
-  <Card title="Watch Video" icon="video" cta="Learn more" href="https://learn.kodekloud.com/user/courses/computer-architecture/module/b128c92f-1260-4a45-8c3b-fe73eb53ea38/lesson/e8cb7828-2e46-4a12-906f-963f5297920b" />
-</CardGroup>
+中文：这个类比之所以有用，是因为它说明 CPU 不是一次性做完整任务，而是不断执行很小的步骤。每一步都要依赖前一步的结果。
+
+English: This analogy is useful because it shows that the CPU does not complete the whole task in one shot. It repeatedly performs very small steps, and each step depends on the result of the previous one.
+
+---
+
+## 6. 一个简单程序 / A Simple Program Example
+
+中文：假设程序要计算 2 + 2。程序先被操作系统从磁盘加载到 RAM，然后 CPU 开始 FDE 循环：先取到加法指令，再译码出操作数位置，最后由 ALU 执行加法，得到结果 4。
+
+English: Suppose a program needs to compute 2 + 2. The program is first loaded from disk into RAM by the operating system, and then the CPU starts the FDE cycle: it fetches the addition instruction, decodes the operand locations, and finally the ALU performs the addition and produces the result 4.
+
+![Simple add program](image/CPUFDECycle/1774750145064.png)
+
+中文：结果可能被写入寄存器、内存，或者传给后续指令继续使用。如果需要显示给用户，它最终还会经过输出设备。
+
+English: The result may be written to a register, to memory, or passed to later instructions. If it needs to be shown to the user, it will eventually be sent to an output device.
+
+---
+
+## 7. 时钟和频率 / Clock and Frequency
+
+中文：CPU 重复 FDE 循环的速度由内部时钟控制。GHz 表示每秒多少十亿个时钟周期。更高的频率意味着每秒有更多节拍可以推动工作前进，但这并不等于每一拍都能完成一条完整指令。
+
+English: The speed of the CPU’s FDE cycle is controlled by its internal clock. GHz means billions of clock cycles per second. A higher frequency means there are more beats per second to move work forward, but that does not mean one instruction is completed in every cycle.
+
+![Clock and ports](image/CPUFDECycle/1774750152344.png)
+
+中文：现代 CPU 会利用流水线、缓存、乱序执行和多个执行单元，把很多步骤重叠起来，所以“一个时钟周期做一件事”并不是现代 CPU 的真实工作方式。
+
+English: Modern CPUs use pipelining, cache, out-of-order execution, and multiple execution units to overlap many steps, so “one cycle does one thing” is not how modern CPUs really work.
+
+---
+
+## 8. 超频与代价 / Overclocking and Trade-offs
+
+中文：如果提高时钟频率，CPU 的吞吐量通常会上升，但同时也会增加功耗和发热。超频相当于给厨师灌咖啡，让他做事更快，但代价是更累、温度更高、稳定性压力更大。
+
+English: If you increase clock frequency, CPU throughput usually increases, but power consumption and heat also rise. Overclocking is like giving the chef espresso so they work faster, but the trade-off is more fatigue, more heat, and greater stability risk.
+
+> 中文：超频不是免费的性能提升。它需要更好的散热、更稳定的供电，并且有可能带来不稳定甚至损坏硬件的风险。
+>
+> English: Overclocking is not free performance. It requires better cooling, more stable power delivery, and it can introduce instability or even hardware damage.
+
+---
+
+## 9. 小结 / Summary
+
+中文：CPU 的本质是不断执行 FDE 循环的计算引擎。它通过控制单元、ALU、寄存器、缓存和内存协同工作，把机器码变成现实中的动作。
+
+English: The CPU is fundamentally an engine that continuously runs the FDE cycle. Through the cooperation of the control unit, ALU, registers, cache, and memory, it turns machine code into real-world actions.
+
+## Further Reading
+
+- [Watch Video](https://learn.kodekloud.com/user/courses/computer-architecture/module/b128c92f-1260-4a45-8c3b-fe73eb53ea38/lesson/e8cb7828-2e46-4a12-906f-963f5297920b)

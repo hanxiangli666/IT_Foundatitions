@@ -1,151 +1,151 @@
-> ## Documentation Index
+# 内存与存储如何协作 / Memory and Storage Working Together
+
+> 中文：这是一份中英文对照学习笔记，重点解释 CPU、寄存器、缓存、RAM、ROM 和存储如何协同工作，为什么虚拟内存能救急但会变慢，以及为什么“保存”和“暂存”是两种完全不同的动作。
 >
-> Fetch the complete documentation index at: https://notes.kodekloud.com/llms.txt
-> Use this file to discover all available pages before exploring further.
+> English: This is a bilingual study note focused on how the CPU, registers, cache, RAM, ROM, and storage work together, why virtual memory can save a system in a pinch but slow it down, and why “saving” and “temporarily holding data” are two very different operations.
 
-# Memory and Storage Working Together
+![Memory and storage working together](image/MemoryandStorageWorkingTogether/1774750630992.png)
 
-> Explains how memory and storage work together on a computer, covering CPU registers, cache, RAM, virtual memory, ROM, storage types, and performance versus persistence trade offs
+## 1. 协作的核心 / The Core Idea of Cooperation
 
-Let's revisit the motherboard to understand how memory and storage cooperate to keep a computer responsive. Think of the CPU as a busy kitchen: without organized workspaces, cooks would spend too much time fetching ingredients from a distant pantry. In computers, memory and storage provide those workspaces so the CPU can process data efficiently.
+中文：CPU 速度非常快，但它并不直接把所有数据都从硬盘里一点一点读出来。为了保持高性能，系统会让数据在不同层级之间流动：存储负责长期保存，RAM 负责运行时工作区，缓存负责保存高频访问内容，寄存器则保存当前正在处理的最小数据单元。这样 CPU 就不必一直等待慢速设备。
 
-Memory gives the CPU a fast, easily reachable workspace that minimizes the time data spends traveling between the processor and long-term storage. Different memory and storage layers balance speed, capacity, volatility, and cost to meet the system's needs.
+English: The CPU is extremely fast, but it does not directly pull every piece of data from disk one by one. To keep performance high, the system moves data through several layers: storage provides long-term persistence, RAM provides the runtime workspace, cache holds frequently accessed content, and registers hold the smallest units of data currently being processed. That way, the CPU does not have to keep waiting on slow devices.
 
-![1774750630992](image/MemoryandStorageWorkingTogether/1774750630992.png)
+中文：如果把 CPU 比作厨房里的厨师，那么 RAM 就像工作台，缓存像厨师手边的小碗，寄存器像手里正拿着的食材，而存储则像冰箱或仓库。任务越频繁需要访问的数据，就越应该放在离 CPU 更近的层级里。
 
-<Frame>
-    <img src="https://mintcdn.com/kodekloud-c4ac6d9a/k9suVL7cFPUhhb5j/images/Computer-Architecture/Memory-and-Storage/Memory-and-Storage-Working-Together/kodekloud-instructor-labeled-motherboard-3d.jpg?fit=max&auto=format&n=k9suVL7cFPUhhb5j&q=85&s=98a9c50f3666f4eaf5f04cab2d69ccf2" alt="A stylized 3D illustration of a motherboard with labeled components (CPU, RAM, VGA, Ethernet, HDMI, USB, storage, WLAN) on a dark purple background. A man wearing a black KodeKloud t-shirt stands in the foreground speaking." width="1920" height="1080" data-path="images/Computer-Architecture/Memory-and-Storage/Memory-and-Storage-Working-Together/kodekloud-instructor-labeled-motherboard-3d.jpg" />
-</Frame>
+English: If the CPU is a chef in a kitchen, RAM is the worktop, cache is the small bowl beside the chef, registers are the ingredients already in hand, and storage is the refrigerator or warehouse. The more frequently data is accessed, the closer it should be to the CPU.
 
-How data moves: CPU ↔ RAM ↔ Storage
+---
 
-* The CPU repeatedly fetches data and instructions from storage into RAM, executes or transforms them, and writes results back to storage when needed.
-* Larger RAM lets a system keep more tasks or datasets in the fast workspace at once, improving multitasking and responsiveness.
-* RAM is volatile: its contents are cleared when power is removed—like a worktop that’s wiped clean when the kitchen closes.
+## 2. 数据如何在各层之间移动 / How Data Moves Between Layers
 
-Registers and cache: closer to the CPU
+中文：程序启动时，操作系统会把程序和数据从存储加载到 RAM。CPU 执行时，会不断从 RAM 读取指令和数据，再把经常重复使用的部分放入缓存，甚至放入寄存器。如果结果需要长期保留，系统再把它写回存储。
 
-Registers are the CPU’s smallest, fastest storage elements — like sticky notes on a chef’s hand for the exact value being used right now. Cache memory is slightly larger and slower than registers but much faster than RAM; it stores frequently used data so the CPU spends less time waiting.
+English: When a program starts, the operating system loads its code and data from storage into RAM. As the CPU runs, it repeatedly reads instructions and data from RAM, then places frequently reused pieces into cache and even registers. If the result needs to be kept long term, the system writes it back to storage.
 
-* Cache levels (L1, L2, L3) are arranged by proximity and speed: L1 is fastest and smallest, L3 is larger but slower.
-* More and better cache reduces CPU stalls and improves performance.
+![Motherboard and memory flow](image/MemoryandStorageWorkingTogether/1774750637110.png)
 
-  ![1774750637110](image/MemoryandStorageWorkingTogether/1774750637110.png)
+中文：这个过程的关键不是“哪一层最好”，而是“哪一层最适合当前任务”。热数据应该留在高速层，冷数据可以留在慢速层。系统如果做得好，CPU 就能持续被喂饱，不会因等数据而停下来。
 
-<Frame>
-    <img src="https://mintcdn.com/kodekloud-c4ac6d9a/k9suVL7cFPUhhb5j/images/Computer-Architecture/Memory-and-Storage/Memory-and-Storage-Working-Together/cache-memory-cpu-ram-diagram-presenter.jpg?fit=max&auto=format&n=k9suVL7cFPUhhb5j&q=85&s=78988f9f4b6ff7cdcd89c30a51eb9497" alt="A stylized diagram of computer hardware showing a CPU with cache, RAM blocks, labeled ports and a binary code overlay with a "Cache Memory" caption. A man in a black t‑shirt stands on the right as if presenting the diagram." width="1920" height="1080" data-path="images/Computer-Architecture/Memory-and-Storage/Memory-and-Storage-Working-Together/cache-memory-cpu-ram-diagram-presenter.jpg" />
-</Frame>
+English: The key point is not “which layer is best,” but “which layer is best for the current job.” Hot data should stay in fast layers, while cold data can remain in slower layers. If the system is designed well, the CPU stays fed with data and does not stall waiting for it.
 
-Virtual memory: extending RAM with storage
+---
 
-When RAM runs out of space, the operating system uses virtual memory (a swap file or pagefile) to extend the working area by moving pages between RAM and storage. This lets more programs run simultaneously but comes at the cost of greatly increased latency.
+## 3. 缓存和寄存器 / Cache and Registers
 
-<Callout icon="lightbulb" color="#1CB2FE">
-  Virtual memory (swap or pagefile) helps prevent crashes when RAM is exhausted, but performance drops because storage devices are much slower than DRAM.
-</Callout>
+中文：寄存器是 CPU 最小、最快的存储单元，保存当前正要使用的值。缓存比寄存器大，但比 RAM 快得多，通常分为 L1、L2 和 L3。L1 最快、最小，L3 更大但更慢。缓存的作用就是减少 CPU 去主内存取数据的次数。
 
-<Frame>
-    <img src="https://mintcdn.com/kodekloud-c4ac6d9a/k9suVL7cFPUhhb5j/images/Computer-Architecture/Memory-and-Storage/Memory-and-Storage-Working-Together/kodekloud-presenter-motherboard-virtual-memory.jpg?fit=max&auto=format&n=k9suVL7cFPUhhb5j&q=85&s=83e3abe5dc4c7433948a1ab91bef4e87" alt="A presenter in a KodeKloud t-shirt stands beside a stylized motherboard diagram labeling parts like CPU, RAM, VGA, Ethernet, HDMI, USB and audio ports. A caption in the corner reads, "Virtual memory is slower than RAM."" width="1920" height="1080" data-path="images/Computer-Architecture/Memory-and-Storage/Memory-and-Storage-Working-Together/kodekloud-presenter-motherboard-virtual-memory.jpg" />
-</Frame>
+English: Registers are the smallest and fastest storage units in the CPU, holding values being used right now. Cache is larger than registers but much faster than RAM, and it is usually divided into L1, L2, and L3. L1 is the fastest and smallest, while L3 is larger but slower. The role of cache is to reduce how often the CPU has to go back to main memory.
 
-![1774750655910](image/MemoryandStorageWorkingTogether/1774750655910.png)
+中文：缓存命中率越高，CPU 等待的时间就越少。对于运行中的程序来说，缓存常常决定了“看起来很快”还是“实际很慢”。很多性能优化，本质上都是在减少缓存未命中和内存访问延迟。
 
+English: The higher the cache hit rate, the less time the CPU spends waiting. For a running program, cache often determines whether the system feels fast or slow. Many performance optimizations are really about reducing cache misses and memory-access latency.
 
+![Cache memory](image/MemoryandStorageWorkingTogether/1774750637110.png)
 
-ROM: persistent firmware
+---
 
-ROM (Read-Only Memory) stores essential startup firmware such as BIOS or UEFI. Unlike RAM, ROM is non-volatile and retains the code needed to initialize hardware every time the system boots—similar to a restaurant’s permanent recipe book.
+## 4. 虚拟内存 / Virtual Memory
 
-![1774750663171](image/MemoryandStorageWorkingTogether/1774750663171.png)
+中文：当 RAM 不够用时，操作系统会使用虚拟内存，也就是把一部分页面放到磁盘上的交换文件或 pagefile 中。这样可以避免程序因为内存不足而立刻崩溃，但代价是明显更高的延迟，因为存储设备比 DRAM 慢得多。
 
-<Frame>
-    <img src="https://mintcdn.com/kodekloud-c4ac6d9a/k9suVL7cFPUhhb5j/images/Computer-Architecture/Memory-and-Storage/Memory-and-Storage-Working-Together/kodekloud-presenter-laptop-rom.jpg?fit=max&auto=format&n=k9suVL7cFPUhhb5j&q=85&s=ed0937e0fc6835aa400af5245501f6ae" alt="A presenter wearing a KodeKloud t-shirt stands next to a large laptop graphic whose screen reads "System is." A label in the corner says "ROM (Read‑Only Memory)."" width="1920" height="1080" data-path="images/Computer-Architecture/Memory-and-Storage/Memory-and-Storage-Working-Together/kodekloud-presenter-laptop-rom.jpg" />
-</Frame>
+English: When RAM runs short, the operating system uses virtual memory, moving some pages into a swap file or pagefile on disk. That can prevent a program from crashing due to lack of memory, but the trade-off is much higher latency, because storage devices are far slower than DRAM.
 
-Storage: long-term persistence
+> **提示 / Tip**
+> 中文：虚拟内存不是“更快的 RAM”，而是“更慢但能救急的扩展区”。它适合应急，不适合当常态工作区。
+> English: Virtual memory is not “faster RAM.” It is a slower emergency extension area. It is useful as a safety net, not as a normal working area.
 
-If RAM is the kitchen worktop, storage is the fridge or pantry—where items are kept until needed. Storage is non-volatile (data survives power loss) but slower than RAM. Typical storage options include SSDs, HDDs, optical media, and remote cloud storage, each offering different combinations of speed, capacity, durability, and cost.
+![Virtual memory example](image/MemoryandStorageWorkingTogether/1774750655910.png)
 
-![1774750671109](image/MemoryandStorageWorkingTogether/1774750671109.png)
+中文：如果你看到系统频繁卡顿、磁盘灯一直亮、应用切换变慢，虚拟内存往往是重点排查对象。它能让系统继续运行，但不能让系统保持流畅。
 
-<Frame>
-    <img src="https://mintcdn.com/kodekloud-c4ac6d9a/k9suVL7cFPUhhb5j/images/Computer-Architecture/Memory-and-Storage/Memory-and-Storage-Working-Together/kodekloud-man-kitchen-ssd-fridge-cat.jpg?fit=max&auto=format&n=k9suVL7cFPUhhb5j&q=85&s=59a5f824bf8dbe10543bf60fc8309fed" alt="A man wearing a black t-shirt with a KodeKloud logo stands on the right. On the left is a purple cartoon kitchen scene with a chef, a fridge labeled "Solid‑State Storage," a speech bubble about using the fridge/SSD, and a small cartoon cat." width="1920" height="1080" data-path="images/Computer-Architecture/Memory-and-Storage/Memory-and-Storage-Working-Together/kodekloud-man-kitchen-ssd-fridge-cat.jpg" />
-</Frame>
+English: If the system keeps stuttering, the disk stays busy, and app switching becomes slow, virtual memory is often a key thing to inspect. It allows the system to keep running, but it does not keep it smooth.
 
-Cloud storage: offsite persistence
+---
 
-Cloud storage keeps data remotely and serves it over the Internet. It’s convenient for backup, sharing, and scaling storage needs, but access latency and bandwidth depend on network connectivity.
+## 5. ROM 和启动固件 / ROM and Firmware
 
-![1774750681122](image/MemoryandStorageWorkingTogether/1774750681122.png)
+中文：ROM 存放的是开机所需的基础代码，也就是 BIOS 或 UEFI 等固件。它们负责最早期的硬件初始化，并在电源刚打开的时候把机器带入可启动状态。与 RAM 不同，ROM 是非易失性的，即使断电也不会丢失内容。
 
-<Frame>
-    <img src="https://mintcdn.com/kodekloud-c4ac6d9a/k9suVL7cFPUhhb5j/images/Computer-Architecture/Memory-and-Storage/Memory-and-Storage-Working-Together/kodekloud-presenter-chef-kitchen-ram-storage.jpg?fit=max&auto=format&n=k9suVL7cFPUhhb5j&q=85&s=73d18afd13ccd6ed98d229a3412f9e65" alt="A stylized purple illustration of a kitchen with a chef cooking at a counter labeled "RAM" and cabinets labeled "Pantry" and "Fridge," with a callout reading "Cloud Storage." On the right, a presenter wearing a black KodeKloud t-shirt stands facing the camera." width="1920" height="1080" data-path="images/Computer-Architecture/Memory-and-Storage/Memory-and-Storage-Working-Together/kodekloud-presenter-chef-kitchen-ram-storage.jpg" />
-</Frame>
+English: ROM stores the basic code needed during startup, such as BIOS or UEFI firmware. These components perform the earliest hardware initialization and bring the machine into a bootable state when power is first applied. Unlike RAM, ROM is non-volatile, so it does not lose its contents when power is removed.
 
-Demo: the difference between RAM and storage (quick exercise)
+![ROM and boot screen](image/MemoryandStorageWorkingTogether/1774750663171.png)
 
-Before the demo, note this important behavior about unsaved changes:
+中文：这意味着 ROM 更像一本永久放在厨房里的菜谱，而不是临时记下来的便签。便签可以随时改，但断电就没了；菜谱稳定、可靠、适合做启动时的基础工作。
 
-<Callout icon="warning" color="#FF6B6B">
-  Unsaved edits exist only in RAM. If you close the editor without saving, those edits are lost even though the file itself persists on storage.
-</Callout>
+English: Think of ROM more like a permanent recipe book kept in the kitchen rather than a temporary note. A note can be changed anytime, but it disappears when power is lost; a recipe book is stable, reliable, and suited for foundational boot-time tasks.
 
-Here’s a brand-new file that doesn’t yet exist on disk. Save it to write its contents to persistent storage (SSD/HDD):
+---
 
-```text
-Hello Kody
-```
+## 6. 存储 / Storage
 
-After saving, the file’s text is written to non-volatile storage. If you add new text but do not save, those changes remain only in RAM. Closing the editor without saving discards the unsaved content; reopening the file will show only the last saved contents from storage.
+中文：如果 RAM 是工作台，存储就是冰箱、储物柜或仓库。它负责长期保存文件、程序和系统数据。存储的特点是容量更大、成本更低、但速度更慢，而且它通常是非易失性的。
 
-![1774750691623](image/MemoryandStorageWorkingTogether/1774750691623.png)
+English: If RAM is the worktop, storage is the refrigerator, cabinet, or warehouse. It is responsible for long-term retention of files, programs, and system data. Storage typically offers larger capacity, lower cost, and slower speed, and it is usually non-volatile.
 
-<Frame>
-    <img src="https://mintcdn.com/kodekloud-c4ac6d9a/k9suVL7cFPUhhb5j/images/Computer-Architecture/Memory-and-Storage/Memory-and-Storage-Working-Together/kodekloud-presenter-unsaved-text-file.jpg?fit=max&auto=format&n=k9suVL7cFPUhhb5j&q=85&s=ebc3945175a5586962f1075db4b22505" alt="A presenter wearing a KodeKloud t‑shirt stands to the right of two dark-themed computer windows. The screens show a text file with "Hello Kody," a "File was not saved" message, and a "Close without save" button." width="1920" height="1080" data-path="images/Computer-Architecture/Memory-and-Storage/Memory-and-Storage-Working-Together/kodekloud-presenter-unsaved-text-file.jpg" />
-</Frame>
+![Storage example](image/MemoryandStorageWorkingTogether/1774750671109.png)
 
-This simple exercise highlights the core distinction: memory (fast, typically volatile) vs. storage (slower, persistent).
+中文：SSD、HDD、光盘和云存储分别适合不同场景。SSD 更快，适合系统盘和应用；HDD 更便宜、容量更大，适合大文件和归档；云存储方便共享、备份和远程访问，但性能依赖网络。
 
-Recap: key takeaways
+English: SSDs, HDDs, optical media, and cloud storage are suited to different scenarios. SSDs are faster and ideal for system drives and applications; HDDs are cheaper and larger, so they are better for large files and archives; cloud storage is convenient for sharing, backup, and remote access, but its performance depends on the network.
 
-![1774750697480](image/MemoryandStorageWorkingTogether/1774750697480.png)
+---
 
-<Frame>
-    <img src="https://mintcdn.com/kodekloud-c4ac6d9a/k9suVL7cFPUhhb5j/images/Computer-Architecture/Memory-and-Storage/Memory-and-Storage-Working-Together/memory-storage-slide-laptop-cat-kodekloud.jpg?fit=max&auto=format&n=k9suVL7cFPUhhb5j&q=85&s=d0c2c3ef06b2db231f138b8765687157" alt="A presentation slide comparing "Memory" and "Storage" with bullet points, and a laptop showing a cartoon cat on its screen. A person wearing a KodeKloud T‑shirt stands on the right side of the image." width="1920" height="1080" data-path="images/Computer-Architecture/Memory-and-Storage/Memory-and-Storage-Working-Together/memory-storage-slide-laptop-cat-kodekloud.jpg" />
-</Frame>
+## 7. 云存储 / Cloud Storage
 
-* Volatility: RAM and cache are volatile; ROM and storage are non-volatile and retain data when power is off.
+中文：云存储的本质不是“数据飘在云里”，而是把数据放在远程数据中心，由网络来访问。它通常提供更好的弹性、共享能力和备份能力，但速度、成本和可用性都受到网络条件影响。
 
-  ![1774750704935](image/MemoryandStorageWorkingTogether/1774750704935.png)
+English: Cloud storage is not “data floating in the sky.” It simply means your data is stored in a remote data center and accessed over the network. It usually offers better elasticity, sharing, and backup capabilities, but speed, cost, and availability are all affected by network conditions.
 
-<Frame>
-    <img src="https://mintcdn.com/kodekloud-c4ac6d9a/k9suVL7cFPUhhb5j/images/Computer-Architecture/Memory-and-Storage/Memory-and-Storage-Working-Together/volatility-motherboard-ram-cache-presenter.jpg?fit=max&auto=format&n=k9suVL7cFPUhhb5j&q=85&s=980abd479a0264e01f073c49da985fb6" alt="A stylized motherboard illustration labeled "Volatility" showing components like CPU, RAM, storage and various ports, with a note that "RAM and cache are volatile." On the right, a person in a black T-shirt stands in front of the graphic, appearing to explain the diagram." width="1920" height="1080" data-path="images/Computer-Architecture/Memory-and-Storage/Memory-and-Storage-Working-Together/volatility-motherboard-ram-cache-presenter.jpg" />
-</Frame>
+![Cloud storage example](image/MemoryandStorageWorkingTogether/1774750681122.png)
 
-* Memory types: registers (fastest and smallest), cache (L1/L2/L3), RAM (main working memory), and ROM (firmware).
-* Storage types: SSDs, HDDs, optical media, and cloud storage — each offers different speed, capacity, durability, and cost trade-offs.
-* Trade-offs: faster memory has lower latency but is more expensive per gigabyte and usually volatile; slower storage is cheaper per gigabyte and persistent, but higher latency means the CPU must wait longer to load data into RAM.
+中文：因此，云存储特别适合协作、同步和容灾，但不适合所有低延迟本地 I/O 场景。理解这一点后，你就能更准确地决定什么时候本地存、什么时候上云。
 
-Summary table: memory vs storage
+English: Cloud storage is therefore great for collaboration, synchronization, and disaster recovery, but it is not ideal for every low-latency local I/O scenario. Once you understand this, you can decide more accurately when to keep data local and when to move it to the cloud.
 
-| Category                | Purpose                                | Examples                               | Characteristics                                                      |
-| ----------------------- | -------------------------------------- | -------------------------------------- | -------------------------------------------------------------------- |
-| Memory (volatile)       | Fast, temporary workspace for CPU      | Registers, L1/L2/L3 cache, DRAM (RAM)  | Very low latency, limited capacity, cleared on power loss            |
-| Firmware (non-volatile) | Startup code & hardware initialization | ROM, EEPROM, UEFI/BIOS chips           | Persistent, small capacity, stores boot instructions                 |
-| Storage (non-volatile)  | Long-term data persistence             | SSD, HDD, optical media, cloud storage | Higher capacity, persistent, higher latency than RAM, cheaper per GB |
+---
 
-Links and References
+## 8. 保存与未保存 / Saved vs Unsaved
 
-* [Kubernetes Basics](https://kubernetes.io/docs/concepts/overview/what-is-kubernetes/) (overview of system architecture concepts)
-* [Wikipedia: Computer Memory](https://en.wikipedia.org/wiki/Computer_memory)
-* [Wikipedia: Cache (computing)](https://en.wikipedia.org/wiki/CPU_cache)
-* [Wikipedia: Virtual Memory](https://en.wikipedia.org/wiki/Virtual_memory)
-* [Understanding SSD vs HDD](https://www.howtogeek.com/356198/what-is-the-difference-between-ssd-and-hdd/)
+中文：一个很重要但容易忽略的事实是：你在编辑器里看到的未保存内容只存在于 RAM 中，而真正写入磁盘的内容才会被长期保留。也就是说，“保存”就是把工作区中的内容从内存写到存储里。
 
-Memory provides the speed your CPU needs to stay responsive; storage provides the persistence that keeps your work safe between power cycles. Understanding their roles and trade-offs helps you choose the right hardware and configure systems for better performance and reliability.
+English: One important but easy-to-ignore fact is that unsaved content in an editor exists only in RAM, while the content written to disk is what gets retained long term. In other words, “saving” means writing the working copy from memory into storage.
 
-<CardGroup>
-  <Card title="Watch Video" icon="video" cta="Learn more" href="https://learn.kodekloud.com/user/courses/computer-architecture/module/79580b70-d812-41b0-9704-6c333005a949/lesson/75a4b6bb-80e5-4d06-937a-e8a6c2629a0d" />
-</CardGroup>
+![Unsaved file example](image/MemoryandStorageWorkingTogether/1774750691623.png)
 
-Built with [Mintlify](https://mintlify.com).
+> **警告 / Warning**
+> 中文：如果你关闭了未保存的文件，内存中的改动就会丢失。文件本身保存在存储里，但未保存的编辑内容只活在 RAM 中。
+> English: If you close an unsaved file, the changes that existed only in memory are lost. The file itself remains on storage, but the unsaved edits lived only in RAM.
+
+中文：这个例子非常适合帮助初学者理解“内存和存储”的分工。RAM 快，但临时；存储慢，但持久。保存按钮的意义，就是把临时工作变成永久记录。
+
+English: This example is excellent for helping beginners understand the division of labor between memory and storage. RAM is fast but temporary; storage is slower but persistent. The save button’s job is to turn temporary work into permanent record.
+
+---
+
+## 9. 复盘 / Recap
+
+中文：这节课最核心的结论是：内存负责快速、临时的工作，存储负责慢一些但永久的保存。RAM 和 cache 是易失性的，ROM 和存储是非易失性的。系统性能的关键，不是单看某个部件的绝对速度，而是看数据有没有被放在最合适的层级。
+
+English: The core conclusion of this lesson is that memory handles fast, temporary work, while storage handles slower but permanent retention. RAM and cache are volatile, while ROM and storage are non-volatile. The key to system performance is not just the absolute speed of one component, but whether data is placed in the most appropriate layer.
+
+![Memory and storage recap](image/MemoryandStorageWorkingTogether/1774750697480.png)
+
+中文：如果某个项目的工作集太大，最先受影响的往往是 RAM；如果某个文件需要长期保存，最先依赖的就是存储。理解这条边界，后面学虚拟内存、缓存、SSD、HDD 和云存储时会轻松很多。
+
+English: If a project’s working set is too large, RAM is usually the first thing affected; if a file needs to be preserved long term, storage is what it depends on first. Once you understand this boundary, later topics like virtual memory, cache, SSDs, HDDs, and cloud storage become much easier.
+
+---
+
+## 快速表格 / Summary Table
+
+| 类别 / Category | 作用 / Purpose | 例子 / Examples | 特点 / Characteristics |
+| --- | --- | --- | --- |
+| Memory (volatile) | CPU 的快速临时工作区 | Registers, cache, RAM | 低延迟、容量较小、断电即失 |
+| Firmware (non-volatile) | 启动与初始化代码 | ROM, BIOS, UEFI | 持久、容量小、负责开机 |
+| Storage (non-volatile) | 长期数据保存 | SSD, HDD, optical, cloud | 容量更大、速度较慢、成本更低 |
+
+## Further Reading
+
+- [Watch Video](https://learn.kodekloud.com/user/courses/computer-architecture/module/79580b70-d812-41b0-9704-6c333005a949/lesson/75a4b6bb-80e5-4d06-937a-e8a6c2629a0d)

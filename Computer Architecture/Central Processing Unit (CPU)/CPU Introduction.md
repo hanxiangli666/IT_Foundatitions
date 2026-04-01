@@ -1,138 +1,99 @@
+# CPU 导论 / CPU Introduction
 
-# CPU Introduction
+> 中文：这是一份中英文对照的 CPU 学习笔记，重点解释 CPU 的内部组成、核心和线程的区别、频率到底是什么意思，以及为什么看参数不能只看一个数字。
+>
+> English: This is a bilingual CPU study note focused on the CPU’s internal components, the difference between cores and threads, what clock speed really means, and why you should never judge a processor by just one number.
 
-> Overview of CPU architecture, components, cores, threads, clock speeds, and practical guidance for interpreting specs and selecting processors.
+## 1. CPU 是什么 / What the CPU Is
 
-Welcome to the next module: a focused tour of the Central Processing Unit (CPU). Every action your computer or smartphone performs — from streaming video to running AI models or gaming — relies on this compact but powerful chip. Modern CPUs perform trillions of operations per second; if you tried to do that work at one operation per second, it would take roughly 30,000 years. How does a tiny piece of silicon achieve this? In this lesson we'll break down the CPU's internal structure, how it runs instructions, and what those marketing numbers (cores, threads, GHz) actually mean.
+中文：中央处理器，也就是 CPU，是计算机里负责通用计算和流程控制的核心部件。它不是专门为某一种任务设计的，而是要面对各种不同类型的工作：运行操作系统、打开浏览器、执行程序、处理输入、协调外设、安排内存访问。CPU 像总指挥，负责让整台机器按照正确顺序工作。
 
-Learning objectives:
+English: The Central Processing Unit, or CPU, is the core component responsible for general-purpose computation and flow control. It is not designed for just one special task. Instead, it has to deal with many different kinds of work: running the operating system, opening a browser, executing programs, handling input, coordinating peripherals, and arranging memory access. The CPU acts like the chief coordinator that keeps the whole machine working in the correct order.
 
-* Identify a CPU's major components and their roles.
-* Explain how a CPU processes instructions, including multithreading and multitasking.
-* Interpret common CPU specs (cores, threads, clock speed) and predict how multiple cores affect performance.
+中文：如果没有 CPU，其他部件再强也无法形成完整系统。GPU 可以加速并行工作，RAM 可以存放临时数据，存储可以保存文件，但只有 CPU 负责决定“下一步做什么”。这也是为什么 CPU 一直是电脑架构中最重要的通用计算单元之一。
 
-Cody will guide us through the concepts, so don’t worry if some terms are new.
+English: Without the CPU, even the strongest components cannot form a complete system. A GPU can accelerate parallel work, RAM can hold temporary data, and storage can keep files, but only the CPU decides “what happens next.” That is why the CPU has always been one of the most important general-purpose computing units in computer architecture.
 
-![1774749985396](image/CPUIntroduction/1774749985396.png)
+---
 
-<Frame>
-    <img src="https://mintcdn.com/kodekloud-c4ac6d9a/k9suVL7cFPUhhb5j/images/Computer-Architecture/Central-Processing-Unit-CPU/CPU-Introduction/purple-motherboard-diagram-presenter-cat.jpg?fit=max&auto=format&n=k9suVL7cFPUhhb5j&q=85&s=24f548666355ac982ce04de9ce75a15a" alt="A stylized, purple-tinted diagram of a computer motherboard with labeled parts like the CPU, RAM, cooling fan, and ports. In the foreground is a presenter holding a circuit board and a small cartoon cat character in the lower-left corner." width="1920" height="1080" data-path="images/Computer-Architecture/Central-Processing-Unit-CPU/CPU-Introduction/purple-motherboard-diagram-presenter-cat.jpg" />
-</Frame>
+## 2. CPU 的主要组成 / Major CPU Components
 
-Selecting CPUs for your team’s laptops can feel overwhelming: different brands, varying core counts, advertised clock speeds, and threads. Let’s make this concrete using a sample spec line: Intel Core i7 — "20 cores (8P + 12E), up to 5.6 GHz, 28 threads." We’ll decode what each number means and why they matter.
+中文：现代 CPU 不是一块简单的芯片，而是由多个核心、缓存、寄存器、控制逻辑、内存控制相关电路以及有时的集成显卡组成。不同部分承担不同职责，共同把一个高层指令拆解成真正可执行的动作。
 
-This simplified die diagram highlights where the CPU’s major subsystems live.
+English: A modern CPU is not a simple chip. It is made up of multiple cores, cache, registers, control logic, memory-controller circuitry, and sometimes integrated graphics. Each part has a different role, and together they turn a high-level instruction into actual executable actions.
 
-![1774749995273](image/CPUIntroduction/1774749995273.png)
+![CPU key components](image/CPUIntroduction/1774749985396.png)
 
-<Frame>
-    <img src="https://mintcdn.com/kodekloud-c4ac6d9a/k9suVL7cFPUhhb5j/images/Computer-Architecture/Central-Processing-Unit-CPU/CPU-Introduction/cpu-block-diagram-kodekloud-presenter.jpg?fit=max&auto=format&n=k9suVL7cFPUhhb5j&q=85&s=5736b728fe15a75339e1712416007f83" alt="A presentation slide showing a colorful CPU block diagram labeled with parts like "Processor Graphics", "Core", "Shared L3 Cache" and "Memory Controller I/O" under the heading "Key Components." A presenter wearing a KodeKloud shirt stands to the right of the slide." width="1920" height="1080" data-path="images/Computer-Architecture/Central-Processing-Unit-CPU/CPU-Introduction/cpu-block-diagram-kodekloud-presenter.jpg" />
-</Frame>
+中文：核心可以理解为独立的执行单元；缓存负责把常用数据尽量留在离核心更近的地方；系统代理和内存控制器负责在核心、内存和 I/O 之间调度数据；集成显卡则为显示和轻量图形任务提供额外能力。你越理解这些部件之间的分工，就越能看懂 CPU 规格页上的每一个参数。
 
-Key CPU components and their functions:
+English: A core can be thought of as an independent execution unit; cache keeps frequently used data as close to the core as possible; the system agent and memory controller coordinate data movement between the cores, memory, and I/O; and integrated graphics provide extra capability for display and lightweight graphics tasks. The better you understand the division of labor among these parts, the easier it becomes to read every number on a CPU spec sheet.
 
-|                        Component | Role                                                                                                                                           |
-| -------------------------------: | ---------------------------------------------------------------------------------------------------------------------------------------------- |
-|                            Cores | Independent execution units; each core can fetch, decode, and execute instructions like a mini-CPU. More cores enable more true parallel work. |
-|               Processor graphics | Integrated GPU for display and graphics workloads; reduces the need for a discrete GPU in many everyday scenarios.                             |
-| System agent / Memory controller | Coordinates data movement between cores, RAM, and I/O devices; crucial for memory throughput and low latency.                                  |
-|             Cache (L1 / L2 / L3) | Very fast on-chip memory that stores frequently used instructions and data close to cores to reduce access latency and increase throughput.    |
+---
 
-Returning to the example spec, the headline reads "20 cores (8P + 12E), 28 threads." What is a thread? A thread is a sequence of programmed instructions — an execution context. Multithreading lets a core present multiple execution contexts so it can make progress on several threads more efficiently.
+## 3. 核心、线程和多任务 / Cores, Threads, and Multitasking
 
-![1774750023711](image/CPUIntroduction/1774750023711.png)
+中文：核心数和线程数经常被一起提到，但它们不是一回事。物理核心是真实存在的执行单元，线程则是系统看到的执行路径。一个核心如果支持同时多线程，就可能在逻辑上表现成多个线程，但这不等于性能翻倍，因为多个线程仍然要共享部分执行资源。
 
-<Frame>
-    <img src="https://mintcdn.com/kodekloud-c4ac6d9a/k9suVL7cFPUhhb5j/images/Computer-Architecture/Central-Processing-Unit-CPU/CPU-Introduction/shared-l3-cache-processor-slide-kodekloud.jpg?fit=max&auto=format&n=k9suVL7cFPUhhb5j&q=85&s=f0c60a077fe72abc97d637dfd1fbf5ea" alt="A slide illustrating processor architecture with a highlighted "Shared L3 Cache" and labels like "Quick Access" and "Better Speed," plus "Key Components" and "Cache" noted below. A presenter wearing a KodeKloud t-shirt stands on the right speaking." width="1920" height="1080" data-path="images/Computer-Architecture/Central-Processing-Unit-CPU/CPU-Introduction/shared-l3-cache-processor-slide-kodekloud.jpg" />
-</Frame>
+English: Core count and thread count are often mentioned together, but they are not the same thing. A physical core is a real execution unit, while a thread is an execution path seen by the system. If a core supports simultaneous multithreading, it may appear as multiple logical threads, but that does not mean performance doubles, because those threads still share some execution resources.
 
-How the 20 cores become 28 threads (for the pictured Core i7):
+![Core and thread diagram](image/CPUIntroduction/1774750023711.png)
 
-* The 8 performance (P) cores support simultaneous multithreading (SMT). Each P-core can run 2 threads → 8 × 2 = 16 threads.
-* The 12 efficiency (E) cores do not support SMT and run 1 thread each → 12 × 1 = 12 threads.
-* Total threads = 16 + 12 = 28.
-* ![1774750030209](image/CPUIntroduction/1774750030209.png)
+中文：多任务也不等于多核。单核单线程时，任务其实是被操作系统快速切换出来的，形成“好像同时运行”的感觉。多核能让不同任务真正并行运行；多线程则让一个核心更充分地利用内部资源。系统里还有 GPU、NPU 和其他加速器，它们可以把某些专门任务从 CPU 手里接过去，减轻 CPU 负担。
 
-<Frame>
-    <img src="https://mintcdn.com/kodekloud-c4ac6d9a/k9suVL7cFPUhhb5j/images/Computer-Architecture/Central-Processing-Unit-CPU/CPU-Introduction/multithreading-cpu-threads-kodekloud-presenter.jpg?fit=max&auto=format&n=k9suVL7cFPUhhb5j&q=85&s=b1ccb39e1163b0b0962f93a0a12349c7" alt="A stylized CPU diagram on the left shows blocks labeled "16 Threads" and "12 Threads" (16 + 12 = 28) with colorful tiles. On the right a presenter wearing a KodeKloud shirt stands beside the heading "Thread — Execution Path" and a "Multithreading" graphic." width="1920" height="1080" data-path="images/Computer-Architecture/Central-Processing-Unit-CPU/CPU-Introduction/multithreading-cpu-threads-kodekloud-presenter.jpg" />
-</Frame>
+English: Multitasking is not the same as multiple cores. On a single-core, single-threaded system, the operating system rapidly switches between tasks to create the illusion that they are running at the same time. Multiple cores allow different tasks to run truly in parallel; multithreading helps one core use its internal resources more efficiently. Systems also include GPUs, NPUs, and other accelerators that can take specialized work off the CPU and reduce its load.
 
-Multitasking at a glance
+---
 
-* Single-core, single-threaded: tasks run one after another. The OS scheduler swaps tasks quickly to give the illusion of concurrency.
-* Multiple cores: truly parallel execution — different cores run different tasks simultaneously (e.g., video decoding, UI, background sync).
-* Multithreading (SMT): a single core presents multiple logical threads and can interleave or parallelize work on replicated pipeline resources to improve utilization.
+## 4. 线程是什么 / What a Thread Is
 
-Example of three independent tasks producing text output:
+中文：线程可以理解为一条执行路径，一段正在被 CPU 推进的程序流。程序不是一次性全部运行完的，而是由许多指令顺序组成。线程告诉操作系统：这条执行路径需要时间、寄存器状态和调度资源。
 
-```text
-Hello, Kody!
-Hello, KodeKloud!
-Hello, World!
-```
+English: A thread can be understood as an execution path, a stream of program activity that the CPU advances over time. Programs do not run all at once; they are made of sequences of instructions. A thread tells the operating system that this execution path needs time, register state, and scheduling resources.
 
-* If there are more runnable tasks than available physical cores, the OS performs context switches so each task gets time on the CPU.
-* Modern systems also offload specialized work to GPUs, NPUs, or dedicated accelerators to free CPU cores for general-purpose tasks.
+中文：在很多工作负载里，线程数增加会提高吞吐量，但对单个任务的收益并不总是线性的。真正决定体验的，不只是线程本身，还包括任务是否能被拆分、内存是否够快、缓存是否命中、系统是否有足够的协调能力。
 
-<Callout icon="lightbulb" color="#1CB2FE">
-  SMT improves throughput by letting a core handle multiple execution paths, but it doesn't double performance for every workload. SMT helps most when threads have complementary resource usage (e.g., one thread stalls on memory while another uses execution units).
-</Callout>
+English: In many workloads, more threads improve throughput, but the benefit for a single task is not always linear. The real user experience is determined not just by threads, but also by whether the work can be split, whether memory is fast enough, whether cache hits are good, and whether the system can coordinate efficiently.
 
-Next: clock speed and what “up to 5.6 GHz” means.
+---
 
-![1774750037199](image/CPUIntroduction/1774750037199.png)
+## 5. 频率和 GHz / Clock Speed and GHz
 
-<Frame>
-    <img src="https://mintcdn.com/kodekloud-c4ac6d9a/k9suVL7cFPUhhb5j/images/Computer-Architecture/Central-Processing-Unit-CPU/CPU-Introduction/intel-core-i7-specs-presentation.jpg?fit=max&auto=format&n=k9suVL7cFPUhhb5j&q=85&s=91ef13168e2581b79342fac873b56c01" alt="A presentation slide showing Intel Core Desktop Processor i7 specifications (Max Turbo up to 5.6 GHz, Performance/Efficient core turbo values, 20 cores (8P+12E), 28 threads, 33 MB L3, etc.). A man wearing a KodeKloud T-shirt stands to the right, gesturing toward the slide." width="1920" height="1080" data-path="images/Computer-Architecture/Central-Processing-Unit-CPU/CPU-Introduction/intel-core-i7-specs-presentation.jpg" />
-</Frame>
+中文：GHz 代表每秒多少十亿个时钟周期。5.6 GHz 就是每秒 56 亿次节拍。你可以把时钟想成节拍器：每一次跳动，CPU 就有机会开始或推进一部分工作。但一个时钟周期并不等于一条完整指令，更不等于一次完整任务。
 
-Giga = billion, hertz = cycles per second. 5.6 GHz = 5.6 billion clock cycles per second. Think of the clock as a regular beat: each tick is an opportunity for the CPU to start or continue micro-operations. However, several important caveats apply:
+English: GHz means billions of clock cycles per second. 5.6 GHz means 5.6 billion beats per second. You can think of the clock as a metronome: each tick gives the CPU a chance to begin or advance some work. But one clock cycle is not the same as one complete instruction, and it is definitely not the same as one complete task.
 
-* Not every instruction completes in a single clock cycle; complex operations may take many cycles.
-* CPUs use pipelining, out-of-order execution, and multiple execution units to complete parts of multiple instructions across overlapping cycles.
-* “Turbo” or “Max Boost” frequencies are the highest achievable clocks for a limited time under favorable power/thermal conditions.
-* ![1774750056076](image/CPUIntroduction/1774750056076.png)
+![GHz explained](image/CPUIntroduction/1774750037199.png)
 
-<Frame>
-    <img src="https://mintcdn.com/kodekloud-c4ac6d9a/k9suVL7cFPUhhb5j/images/Computer-Architecture/Central-Processing-Unit-CPU/CPU-Introduction/kodekloud-presenter-5-6ghz-infographic.jpg?fit=max&auto=format&n=k9suVL7cFPUhhb5j&q=85&s=dbcb2707d6ebf07f7de30322e4af2a7e" alt="A presenter in a black KodeKloud t-shirt gestures on the right while a colorful infographic about gigahertz and a 5.6 GHz CPU (noting "5.6 billion times per second") is shown on a dark background. A partial specs table appears on the left." width="1920" height="1080" data-path="images/Computer-Architecture/Central-Processing-Unit-CPU/CPU-Introduction/kodekloud-presenter-5-6ghz-infographic.jpg" />
-</Frame>
+中文：更高频率通常意味着更高吞吐量，但也会带来更高功耗和更大的散热压力。现代 CPU 会使用流水线、乱序执行和多个执行单元，把多个指令片段交错处理，所以它们的表现远比“时钟数字”复杂。
 
-Putting GHz into perspective:
+English: A higher frequency usually means higher throughput, but it also brings higher power consumption and greater thermal pressure. Modern CPUs use pipelining, out-of-order execution, and multiple execution units to interleave pieces of multiple instructions, so their performance is far more complex than a single clock number suggests.
 
-* A hummingbird flaps \~80 times per second. 5.6 GHz is roughly 70 million times faster.
-* An electric toothbrush vibrates \~1,000 times per second. 5.6 GHz is about 5.6 million times faster.
+> 中文：不要把更高的 GHz 直接等同于更好的性能。不同架构、不同缓存、不同功耗设计和不同工作负载，都会让结果完全不一样。
+>
+> English: Do not equate a higher GHz directly with better performance. Different architectures, cache sizes, power designs, and workloads can produce very different outcomes.
 
-But remember: raw frequency is only one factor. Architecture efficiency, cache size and hierarchy, memory bandwidth and latency, core count, and the workload’s parallelism all shape real-world performance.
+---
 
-![1774750067785](image/CPUIntroduction/1774750067785.png)
+## 6. 采购视角 / Practical Procurement View
 
-<Frame>
-    <img src="https://mintcdn.com/kodekloud-c4ac6d9a/k9suVL7cFPUhhb5j/images/Computer-Architecture/Central-Processing-Unit-CPU/CPU-Introduction/man-speaking-slide-instruction-single-tick.jpg?fit=max&auto=format&n=k9suVL7cFPUhhb5j&q=85&s=7e88ec0eac83946093f34affa3616d82" alt="A presenter in a black t-shirt is speaking in front of a presentation slide. The slide reads "Not every instruction is completed in a single tick" and shows purple circular graphics alongside a table of GHz values." width="1920" height="1080" data-path="images/Computer-Architecture/Central-Processing-Unit-CPU/CPU-Introduction/man-speaking-slide-instruction-single-tick.jpg" />
-</Frame>
+中文：如果你是在选购或评估 CPU，正确的顺序不是先看最高频率，而是先看工作负载。办公、网页和轻量应用更看重单核性能和集成图形；编译、虚拟化和重度多任务更看重核心和线程；高性能持续负载则要看散热和功耗限制。
 
-<Callout icon="warning" color="#FF6B6B">
-  Do not equate higher GHz directly with better performance for all workloads. A newer CPU with lower clock speed can outperform an older, higher-clocked chip due to architectural improvements, larger caches, or more efficient execution pipelines.
-</Callout>
+English: If you are purchasing or evaluating a CPU, the right order is not to start with the maximum frequency. Start with the workload. Office work, web browsing, and lightweight apps care more about single-core performance and integrated graphics; compilation, virtualization, and heavy multitasking care more about core and thread count; sustained high performance depends heavily on cooling and power limits.
 
-Summary — evaluating laptop CPUs for procurement
+中文：还要看缓存、内存支持和实际基准测试。很多 CPU 的参数页看起来很漂亮，但如果散热跟不上，实际使用中根本跑不到标称的高频；如果任务无法并行，增加核心也未必有明显提升。
 
-* Prioritize the workload: many office apps and web browsing benefit from higher single-thread performance and good integrated graphics; software compilation, virtualization, and heavy multitasking benefit from more cores and threads.
-* Consider thermal and power limits: thin laptops may not sustain turbo clocks for long due to cooling constraints.
-* Look beyond headline numbers: compare cache sizes, memory support (LPDDR vs. DDR), and real-world benchmarks for your typical applications.
-* ![1774750074937](image/CPUIntroduction/1774750074937.png)
+English: You also need to look at cache, memory support, and real benchmarks. Many CPU spec sheets look impressive, but if cooling cannot keep up, the chip may never sustain its advertised high frequencies. And if a task cannot be parallelized, adding more cores may not help much.
 
-<Frame>
-    <img src="https://mintcdn.com/kodekloud-c4ac6d9a/k9suVL7cFPUhhb5j/images/Computer-Architecture/Central-Processing-Unit-CPU/CPU-Introduction/kodekloud-presenter-new-laptop-02-grid.jpg?fit=max&auto=format&n=k9suVL7cFPUhhb5j&q=85&s=0a92c02e90c4ed9ac52ef025fbc0be91" alt="A presenter stands on the right wearing a "KodeKloud" shirt. To the left is a dark purple product page titled "New Laptop" with filter controls and a grid of stylized laptop cards, with "Laptop 02" highlighted." width="1920" height="1080" data-path="images/Computer-Architecture/Central-Processing-Unit-CPU/CPU-Introduction/kodekloud-presenter-new-laptop-02-grid.jpg" />
-</Frame>
+![Laptop selection example](image/CPUIntroduction/1774750074937.png)
 
-Further reading and references
+---
 
-* Intel: Introduction to CPU architecture — [https://www.intel.com/](https://www.intel.com/)
-* CPU basics and performance factors — [https://en.wikipedia.org/wiki/Central\_processing\_unit](https://en.wikipedia.org/wiki/Central_processing_unit)
-* Multithreading and SMT overview — [https://en.wikipedia.org/wiki/Simultaneous\_multithreading](https://en.wikipedia.org/wiki/Simultaneous_multithreading)
+## 7. 小结 / Summary
 
-Armed with these concepts, you can make informed CPU choices for your team and better interpret the marketing spec lines on product pages.
+中文：CPU 是通用计算和流程控制的核心。理解核心、线程、频率、缓存和内存控制器之后，你就能更准确地理解“这颗处理器为什么快，为什么有时又不快”。
 
-<CardGroup>
-  <Card title="Watch Video" icon="video" cta="Learn more" href="https://learn.kodekloud.com/user/courses/computer-architecture/module/b128c92f-1260-4a45-8c3b-fe73eb53ea38/lesson/f25621b6-002e-44b1-9b2e-b4a8aa0ef26d" />
-</CardGroup>
+English: The CPU is the core of general-purpose computation and flow control. Once you understand cores, threads, frequency, cache, and the memory controller, you can better explain why a processor is fast in some situations and not in others.
+
+## Further Reading
+
+- [Watch Video](https://learn.kodekloud.com/user/courses/computer-architecture/module/b128c92f-1260-4a45-8c3b-fe73eb53ea38/lesson/f25621b6-002e-44b1-9b2e-b4a8aa0ef26d)

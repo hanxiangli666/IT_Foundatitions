@@ -1,138 +1,135 @@
-# Demo Creating S3 Bucket on AWS
+﻿# Demo Creating S3 Bucket on AWS
 
-> Guide to creating and managing an AWS S3 bucket, covering security settings, storage classes, versioning, lifecycle rules, uploading objects, and best practices for cost and access control
+> AWS S3 实操增强笔记：从创建 Bucket 到安全配置、存储类别、生命周期规则与资源清理，按中英逐段对照展开，并补充课堂外的治理实践。
+>
+> Enhanced AWS S3 hands-on note: from bucket creation to security settings, storage classes, lifecycle policies, and cleanup, presented in paragraph-by-paragraph bilingual format with practical governance extensions.
 
-In this lesson you’ll create an Amazon S3 bucket and review the key settings used to store files in the cloud — for example, daily database backups or archived logs. Amazon S3 (Simple Storage Service) is AWS’s primary object storage service and is widely used for scalable, durable, and cost-effective storage of objects (files).
+## 1. 本节目标 / Lesson Goal
 
-A bucket is the top-level container for objects in S3. It behaves like a cloud folder but includes built-in features for security, redundancy, lifecycle management, and storage-class controls. For most mixed-use workloads, a general-purpose bucket with sensible defaults is appropriate.
+本节的真实目标不是“会上传文件”，而是理解对象存储如何在安全、成本、可维护性之间做平衡。
 
-Note: bucket names must be globally unique across all AWS accounts. If your chosen name is already taken, you will be prompted to pick a different one.
+The real goal is not just uploading files, but understanding how object storage balances security, cost, and maintainability.
+
+S3 是 AWS 的核心对象存储服务，适用于备份、日志、媒体文件、静态资源等多种场景。
+
+S3 is AWS's core object storage service and is used for backups, logs, media, static assets, and many other scenarios.
+
+## 2. 创建 Bucket 前需要知道什么 / What to Know Before Creating a Bucket
+
+Bucket 名称必须全局唯一，这是课堂演示中最先出现的实际限制。命名建议采用“组织-环境-业务-随机后缀”模式，减少冲突。
+
+Bucket names must be globally unique, a practical constraint shown early in the demo. A naming pattern like org-env-workload-randomSuffix reduces collisions.
+
+Bucket 不是普通文件夹，它附带访问控制、生命周期、版本管理、加密与审计能力。
+
+A bucket is not just a folder; it includes access control, lifecycle policy, versioning, encryption, and audit behavior.
 
 ![1774969402294](image/DemoCreatingS3BucketonAWS/1774969402294.png)
 
-<Frame>
-    <img src="https://mintcdn.com/kodekloud-c4ac6d9a/XqMRTrEG2GqQdgEv/images/Cloud-Computing-Fundamentals/Cloud-Providers/Demo-Creating-S3-Bucket-on-AWS/s3-create-kk-demo-bucket-kodekloud.jpg?fit=max&auto=format&n=XqMRTrEG2GqQdgEv&q=85&s=60167f660d81260dadea598acbab62cb" alt="An AWS S3 "Create bucket" console screenshot showing a highlighted bucket name ("kk-demo-bucket") and object ownership/public access settings. A presenter wearing a KodeKloud t-shirt stands to the right, pointing at the screen." width="1920" height="1080" data-path="images/Cloud-Computing-Fundamentals/Cloud-Providers/Demo-Creating-S3-Bucket-on-AWS/s3-create-kk-demo-bucket-kodekloud.jpg" />
-</Frame>
+## 3. 创建阶段的关键配置 / Key Settings During Creation
 
-## Creating a bucket — key settings to review
+Object Ownership 建议保持 Bucket owner enforced，这样你可以统一通过 IAM 与 Bucket Policy 管理权限，避免 ACL 带来的复杂度。
 
-When creating a bucket, pay attention to these controls and their recommended use:
+Keep Object Ownership as Bucket owner enforced so permissions remain centralized through IAM and bucket policy, avoiding ACL complexity.
 
-* Object ownership: Set to “bucket owner enforced” to disable ACLs and ensure objects uploaded by other accounts are owned by your bucket account. This centralizes access control to IAM and bucket policies.
-* Block Public Access: Enabled by default. Keeps objects from being publicly accessible unless you explicitly allow it. Recommended for secure-by-default posture.
-* Versioning: When enabled, S3 preserves all versions of every object in a bucket. Great for backups and recovering from accidental deletes, but increases storage usage and cost.
-* Tags: Key/value pairs for organizing resources. Useful for billing, automation, and filtering.
+Block Public Access 建议默认开启，除非你有明确、经过评审的公开访问需求。
 
-Table — Quick guidance for bucket settings
+Keep Block Public Access enabled by default unless you have a clear, reviewed requirement for public exposure.
 
-| Setting             | Purpose                                  | Recommendation                                                                      |
-| ------------------- | ---------------------------------------- | ----------------------------------------------------------------------------------- |
-| Object ownership    | Control who owns uploaded objects        | Set to `bucket owner enforced` for centralized control                            |
-| Block Public Access | Prevent unintended public access         | Keep enabled unless you have a specific, reviewed use case                          |
-| Versioning          | Retain object history and recoverability | Enable if you need point-in-time recovery or protection against accidental deletion |
-| Tags                | Organize and track costs                 | Add billing or environment tags (e.g.,`env:prod`, `team:analytics`)             |
+Versioning 可提升可恢复性，但会增加存储成本；Tag 用于成本归集、自动化运维与资源检索，应在创建阶段就规划。
 
-## Uploading objects and storage classes
+Versioning improves recoverability but increases storage cost; tags support cost allocation, automation, and discoverability, and should be planned at creation time.
 
-After creating the bucket you can upload objects. Each object has metadata such as content type, last-modified timestamp, size, and a storage class that determines cost and retrieval behavior. You can select a storage class during upload or use lifecycle rules to migrate objects automatically.
+## 4. 上传对象与权限验证 / Upload Objects and Validate Access
 
-Before uploading, verify the Permissions tab to confirm ownership and public access settings match your security requirements. In the Properties tab you can view or set storage class options during upload.
+上传对象后要检查元数据，包括大小、内容类型、时间戳、存储类别与加密状态。
 
-The S3 console includes a pricing table and descriptions for each storage class so you can compare performance, retrieval latency, and cost by region.
+After upload, inspect metadata such as size, content type, timestamps, storage class, and encryption state.
+
+如果公共访问被阻止，匿名访问对象 URL 出现 AccessDenied 是预期结果，说明默认安全策略生效。
+
+If public access is blocked, AccessDenied for anonymous object URL access is expected and indicates secure defaults are working.
 
 ![1774969414895](image/DemoCreatingS3BucketonAWS/1774969414895.png)
 
-<Frame>
-    <img src="https://mintcdn.com/kodekloud-c4ac6d9a/XqMRTrEG2GqQdgEv/images/Cloud-Computing-Fundamentals/Cloud-Providers/Demo-Creating-S3-Bucket-on-AWS/aws-s3-pricing-kodekloud-presenter.jpg?fit=max&auto=format&n=XqMRTrEG2GqQdgEv&q=85&s=f64b1261421466c77c11d10e730893c2" alt="A screenshot of an AWS S3 pricing page displayed on the left side of the image. On the right, a person wearing a black KodeKloud t-shirt stands and gestures as if explaining the content." width="1920" height="1080" data-path="images/Cloud-Computing-Fundamentals/Cloud-Providers/Demo-Creating-S3-Bucket-on-AWS/aws-s3-pricing-kodekloud-presenter.jpg" />
-</Frame>
+## 5. 存储类别选择逻辑 / Storage Class Decision Logic
 
-If you leave objects in the Standard storage class, you get general-purpose, frequently accessed storage. Because the bucket has public access blocked in our example, trying to open an object URL as an anonymous user returns an access denied error. Use the console’s Open button, pre-signed URLs, or proper IAM permissions to view or download objects.
+存储类别不是“越便宜越好”，而是要与访问频率、恢复时间目标、保留周期配套。
 
-### Storage class summary
+Storage class is not about choosing the cheapest tier; it must align with access frequency, recovery-time expectations, and retention duration.
 
-| Storage class              | Typical use case                                 | Retrieval / cost characteristics                 |
-| -------------------------- | ------------------------------------------------ | ------------------------------------------------ |
-| Standard                   | Frequently accessed data                         | Low latency, higher cost                         |
-| Standard-IA / One Zone-IA  | Infrequently accessed but quick retrieval needed | Lower storage cost, retrieval fees apply         |
-| Intelligent-Tiering        | Auto-optimizes cost for unknown access patterns  | Automated tiering, small monitoring fee          |
-| Glacier Instant Retrieval  | Archive with immediate access                    | Low-cost archival, 90-day minimum storage charge |
-| Glacier Flexible Retrieval | Archive with configurable retrieval times        | Very low storage cost, retrieval times vary      |
-| Glacier Deep Archive       | Long-term archival                               | Lowest storage cost, retrieval may take hours    |
+Standard 适合高频访问；Intelligent-Tiering 适合访问模式不确定；Glacier 系列适合归档与长期保存。
 
-## Lifecycle rules — automate cost optimization
+Standard fits frequent access; Intelligent-Tiering fits uncertain access patterns; Glacier classes fit archival and long retention.
 
-Lifecycle rules let you automate transitions between storage classes or expire objects after a certain time. From the Management tab, click Create lifecycle rule and give it a name. You can then specify filters (prefix, tags, size) and actions (transition current versions, transition noncurrent versions, expire objects).
+课堂里展示了定价页面，核心价值是让你意识到成本模型是“存储+请求+检索+时长约束”的组合。
 
-Example: transition current object versions to a cheaper storage class after 30 days. If you don’t use versioning, select options that apply only to current versions.
+The pricing page in class highlighted that cost is a combination of storage, request, retrieval, and duration constraints.
 
-Important lifecycle considerations:
+## 6. 生命周期规则 / Lifecycle Rules
 
-* Transitioning objects may incur transition costs.
-* Some storage classes have minimum storage duration charges (for example, Glacier Instant Retrieval typically has a 90-day minimum).
-* After a rule is active, the console will show the storage class change for objects once conditions are met.
+生命周期规则是对象存储降本最关键的自动化能力。你可以按对象年龄、前缀、标签等条件自动转层或过期删除。
 
-  ![1774969464479](image/DemoCreatingS3BucketonAWS/1774969464479.png)
+Lifecycle rules are the most important automation mechanism for object-storage cost control. You can transition or expire data by object age, prefix, tags, and other filters.
 
-<Frame>
-    <img src="https://mintcdn.com/kodekloud-c4ac6d9a/XqMRTrEG2GqQdgEv/images/Cloud-Computing-Fundamentals/Cloud-Providers/Demo-Creating-S3-Bucket-on-AWS/s3-create-lifecycle-rule-kodekloud-presenter.jpg?fit=max&auto=format&n=XqMRTrEG2GqQdgEv&q=85&s=a62bf0c0a8ed0c6555a3bfcde334a8b0" alt="A screenshot of the Amazon S3 console’s "Create lifecycle rule" page is shown on the left. On the right, a presenter wearing a black KodeKloud t-shirt is standing and gesturing." width="1920" height="1080" data-path="images/Cloud-Computing-Fundamentals/Cloud-Providers/Demo-Creating-S3-Bucket-on-AWS/s3-create-lifecycle-rule-kodekloud-presenter.jpg" />
-</Frame>
+课堂演示了 30 天后转入 Glacier Instant Retrieval 的规则，这体现了“先用高性能层，后转低成本层”的经典策略。
 
-After saving a lifecycle rule the console presents a summary and success banner indicating your rule is configured.
+The class demonstrated a 30-day transition to Glacier Instant Retrieval, representing a classic pattern: start in higher-performance storage, then transition to cheaper archival tiers.
+
+![1774969464479](image/DemoCreatingS3BucketonAWS/1774969464479.png)
 
 ![1774969475719](image/DemoCreatingS3BucketonAWS/1774969475719.png)
 
-<Frame>
-    <img src="https://mintcdn.com/kodekloud-c4ac6d9a/XqMRTrEG2GqQdgEv/images/Cloud-Computing-Fundamentals/Cloud-Providers/Demo-Creating-S3-Bucket-on-AWS/kodekloud-presenter-s3-lifecycle-success.jpg?fit=max&auto=format&n=XqMRTrEG2GqQdgEv&q=85&s=7acab49fe13f0be97af60b34be1b9f9d" alt="A presenter wearing a black "KodeKloud" t-shirt stands to the right of a large screenshot of the Amazon S3 console showing a "Lifecycle configuration" page and a green success banner. The screen lists a "30-day" lifecycle rule and options to view, edit, delete, or create rules." width="1920" height="1080" data-path="images/Cloud-Computing-Fundamentals/Cloud-Providers/Demo-Creating-S3-Bucket-on-AWS/kodekloud-presenter-s3-lifecycle-success.jpg" />
-</Frame>
+### 6.1 生命周期补充注意点 / Extra Lifecycle Considerations
 
-## Deleting objects and buckets
+对象转层可能产生转换费用；某些低频层存在最短存储时长限制，提前删除会产生额外费用。
 
-To delete a file manually, use the object actions menu in the console. Remember: to delete a bucket you must first remove all objects and all object versions if versioning is enabled. AWS will not allow deletion of a non-empty bucket.
+Transitions may incur transition charges; some archive tiers enforce minimum storage duration, and early deletion may trigger extra cost.
 
-<Callout icon="lightbulb" color="#1CB2FE">
-  Use lifecycle rules to automate retention and cost management. They can transition objects to cheaper tiers or expire objects when they’re no longer needed.
-</Callout>
+启用版本控制后，生命周期策略需要区分 current 与 noncurrent 版本，否则会出现“当前对象被管理了、历史版本堆积未清理”的情况。
 
-## Pop quiz — best practice
+With versioning enabled, lifecycle rules must cover both current and noncurrent versions; otherwise old versions accumulate silently.
 
-You upload a file to an S3 bucket. Which step ensures resources are created, used, and cleaned up correctly?
+## 7. 删除对象与删除 Bucket / Delete Objects and Delete Bucket
 
-A. Upload the file, make it public, and forget about the bucket. It will auto-delete.
-B. Use S3 lifecycle rules to archive or delete objects automatically when no longer needed.
-C. Store all your files in the root bucket with the same name, and never delete anything.
-D. Delete the bucket before removing the objects to save time.
+删除 Bucket 前必须先删除对象；启用了版本控制时，还要删除历史版本与 delete markers。
 
-Pause now. Welcome back — the correct answer is B.
+You must empty objects before deleting a bucket; with versioning, historical versions and delete markers must also be removed.
 
-Why:
+课堂强调了“资源不会自动清理”，这是云成本治理的基础认知。
 
-* B is correct: lifecycle rules automate archival or deletion and help control costs.
-* A is dangerous: objects and buckets do not auto-delete; leaving public objects or orphaned data creates cost and security risks.
-* C is poor practice: poor naming and never deleting data lead to costly and unmanageable storage.
-* D won’t work: AWS requires a bucket to be empty before it can be deleted.
+The lesson stressed that resources are not auto-cleaned, which is foundational for cloud cost governance.
 
-## Recap and next steps
+## 8. 课堂外安全实践补充 / Extra Security Practices
 
-* Core cloud services across providers include Compute, Storage, Databases, and Networking. Names differ (EC2, Blob Storage, Cloud SQL) but functions are comparable.
-* In this lesson you created an S3 bucket, uploaded objects, reviewed security and ownership settings, inspected storage classes and pricing, and configured lifecycle rules to automate cost control and retention.
-* Use versioning, appropriate access controls (IAM and bucket policies), and lifecycle rules together for secure, scalable, and cost-effective storage.
+建议默认启用加密（SSE-S3 或 SSE-KMS），对敏感数据使用 KMS 并结合最小权限 IAM 策略。
 
-  ![1774969491293](image/DemoCreatingS3BucketonAWS/1774969491293.png)
+Enable encryption by default (SSE-S3 or SSE-KMS), and use KMS plus least-privilege IAM for sensitive data.
 
-<Frame>
-    <img src="https://mintcdn.com/kodekloud-c4ac6d9a/XqMRTrEG2GqQdgEv/images/Cloud-Computing-Fundamentals/Cloud-Providers/Demo-Creating-S3-Bucket-on-AWS/kodekloud-presenter-demos-gcp-s3-security.jpg?fit=max&auto=format&n=XqMRTrEG2GqQdgEv&q=85&s=72ddb6fcaf0df70672b9253a7acdee25" alt="A presenter stands on the right wearing a black KodeKloud t-shirt and gesturing while speaking. On the left is a purple slide titled "Demos" listing: launching a VM in GCP; uploading files to AWS S3; and security settings, storage classes, and lifecycle rules." width="1920" height="1080" data-path="images/Cloud-Computing-Fundamentals/Cloud-Providers/Demo-Creating-S3-Bucket-on-AWS/kodekloud-presenter-demos-gcp-s3-security.jpg" />
-</Frame>
+尽量避免直接开放 Bucket 公网读取；如需分发静态内容，优先通过 CloudFront 做受控分发。
 
-Further reading and references:
+Avoid direct public bucket exposure where possible; if public distribution is needed, prefer controlled delivery through CloudFront.
 
-* [AWS S3 documentation](https://docs.aws.amazon.com/s3/index.html)
-* AWS S3 pricing and storage class details (linked from the S3 console)
-* [AWS Cloud Practitioner (CLF-C02) course](https://learn.kodekloud.com/user/courses/aws-cloud-practitioner-clf-c02)
+建议开启 CloudTrail 数据事件或相关审计日志，建立对象访问可追踪性。
 
-<CardGroup>
-  <Card title="Watch Video" icon="video" cta="Learn more" href="https://learn.kodekloud.com/user/courses/cloud-computing-fundamentals/module/db2b85ff-442f-481d-a308-21c5eb63344b/lesson/294b3b7a-9321-413e-a2dd-15ae869668b9" />
+Enable CloudTrail data events or equivalent audit logging for object-level access traceability.
 
-  `<Card title="Practice Lab" icon="flask-conical" cta="Learn more" href="https://learn.kodekloud.com/user/courses/cloud-computing-fundamentals/module/db2b85ff-442f-481d-a308-21c5eb63344b/lesson/53ff9d21-22af-4ddb-9c7f-fb6504ef0ee1" />`
-`</CardGroup>`
+## 9. 课堂回顾 / Lesson Recap
 
-Built with [Mintlify](https://mintlify.com).
+本节你应当掌握三件事：
+
+You should leave this lesson with three core abilities:
+
+1. 能正确创建并配置 S3 Bucket 的安全基线。
+2. 能根据访问模式选择存储类别。
+3. 能用生命周期规则实现自动化成本管理与清理策略。
+
+1. Create S3 buckets with a secure baseline configuration.
+2. Select storage classes based on access behavior.
+3. Use lifecycle rules for automated cost and retention governance.
+
+![1774969491293](image/DemoCreatingS3BucketonAWS/1774969491293.png)
+
+如果你把“命名、权限、生命周期、清理”四件事做成固定模板，S3 运维质量会显著提升。
+
+If you standardize naming, access, lifecycle, and cleanup as a repeatable template, S3 operational quality improves dramatically.

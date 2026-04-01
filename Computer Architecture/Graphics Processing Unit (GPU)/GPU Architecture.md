@@ -1,140 +1,101 @@
-# GPU Architecture
+# GPU 架构 / GPU Architecture
 
-> Explains GPU architecture differences from CPUs and how cores, memory, clock speed, and specialized units affect AI training and inference performance and efficiency
+> 中文：这是一份中英文对照的 GPU 架构笔记，重点解释 GPU 和 CPU 的结构差异、GPU 如何并行处理、为什么 VRAM 很重要，以及为什么 GPU 更适合大规模同类计算。
+>
+> English: This is a bilingual GPU architecture note focused on structural differences between GPUs and CPUs, how GPUs process in parallel, why VRAM matters, and why GPUs are better suited to massive similar computations.
 
-Welcome back. In the previous section you rolled out laptops across your company. Now your R\&D team is building an internal chatbot (think ChatGPT trained on company data). Training that model is painfully slow on CPUs alone—it's like trying to read a library one page at a time. To accelerate training we need to run thousands of calculations in parallel, which is exactly what GPUs are designed to do.
+## 1. GPU 和 CPU 的区别 / GPU vs CPU
 
-In this lesson you'll learn:
+中文：CPU 和 GPU 的根本区别不是“谁更高级”，而是“优化目标不同”。CPU 追求低延迟和复杂控制，GPU 追求高吞吐量和大规模并行。CPU 常见的是少量强核心，GPU 则是大量较小的并行核心。
 
-* What architectural differences make GPUs better for certain workloads than CPUs.
-* How GPU performance depends on core structure, clock speed, and memory.
-* Which GPU features matter for AI training and inference.
+English: The fundamental difference between a CPU and a GPU is not “which one is better,” but “which one is optimized for what.” CPUs aim for low latency and complex control, while GPUs aim for high throughput and massive parallelism. CPUs usually have a small number of powerful cores, while GPUs have many smaller parallel cores.
 
-  ![1774750264601](image/GPUArchitecture/1774750264601.png)
+![GPU vs CPU architecture](image/GPUArchitecture/1774750264601.png)
 
-<Frame>
-    <img src="https://mintcdn.com/kodekloud-c4ac6d9a/k9suVL7cFPUhhb5j/images/Computer-Architecture/Graphics-Processing-Unit-GPU/GPU-Architecture/purple-motherboard-diagram-kodekloud-presenter-cat.jpg?fit=max&auto=format&n=k9suVL7cFPUhhb5j&q=85&s=ac7e291ef5f06b381351031524396005" alt="A stylized, purple-themed diagram of a computer motherboard highlighting components like the GPU, CPU, RAM and ports. A presenter wearing a "KodeKloud" shirt stands at the right and a small cartoon cat character appears at the lower left." width="1920" height="1080" data-path="images/Computer-Architecture/Graphics-Processing-Unit-GPU/GPU-Architecture/purple-motherboard-diagram-kodekloud-presenter-cat.jpg" />
-</Frame>
+中文：如果工作负载需要频繁分支判断、复杂控制流和顺序处理，CPU 更合适；如果工作负载是大量相似运算、矩阵计算和图像处理，GPU 就会更有优势。
 
-High-level comparison: CPUs versus GPUs
+English: If a workload requires frequent branching, complex control flow, and sequential processing, a CPU is a better fit. If the workload consists of many similar operations, matrix math, and image processing, a GPU will usually have the advantage.
 
-* CPU: A few powerful cores optimized for complex, branching, single-threaded or moderately parallel tasks.
-* GPU: Thousands of simpler cores optimized for performing the same operation over large data sets in parallel.
+---
 
-The GPU approach—massive parallelism—matches workloads such as rendering pixels, applying shaders across vertices, and dense matrix math in machine learning. For deep learning, GPUs can run thousands of arithmetic operations at once, reducing training time from days to hours compared to CPU-only training.
+## 2. GPU 的并行结构 / GPU Parallel Structure
 
-![1774750271056](image/GPUArchitecture/1774750271056.png)
+中文：GPU 的设计目标是让成百上千个计算单元同时工作。它不是把资源集中在少数“聪明核心”上，而是把大量核心组织成集群或簇，然后一起处理同一种类型的任务。
 
-<Frame>
-    <img src="https://mintcdn.com/kodekloud-c4ac6d9a/k9suVL7cFPUhhb5j/images/Computer-Architecture/Graphics-Processing-Unit-GPU/GPU-Architecture/compare-gpus-cpus-slide-cat-presenter.jpg?fit=max&auto=format&n=k9suVL7cFPUhhb5j&q=85&s=033aa0ce555222990a56b24a6b49e15d" alt="A dark purple presentation slide titled "Compare GPUs and CPUs" with bullet headings like Architecture, Processing Model, Workloads, and a second point about how GPU performance is influenced by various factors. A cartoon cat is on the left and a presenter wearing a KodeKloud T‑shirt stands on the right." width="1920" height="1080" data-path="images/Computer-Architecture/Graphics-Processing-Unit-GPU/GPU-Architecture/compare-gpus-cpus-slide-cat-presenter.jpg" />
-</Frame>
+English: A GPU is designed so that hundreds or thousands of compute units can work at the same time. It does not concentrate resources into a few “smart cores.” Instead, it organizes many cores into clusters and has them work together on the same kind of task.
 
-Why thousands of cores?
+![Clusters of cores](image/GPUArchitecture/1774750271056.png)
 
-GPUs organize their many cores into clusters—often called streaming multiprocessors (NVIDIA) or compute units (AMD). These clusters let teams of cores work in lockstep, increasing throughput and reducing coordination overhead. Imagine a factory: teams specialize in packaging, assembly, and quality checks; the coordinated teams achieve far higher throughput than the same number of lone workers.
+中文：这种结构非常适合 AI 训练、图像渲染、视频编码、科学模拟和大规模数值分析。只要计算可以被切成很多小块，GPU 就能把它们一起处理。
 
-![1774750278991](image/GPUArchitecture/1774750278991.png)
+English: This structure is excellent for AI training, image rendering, video encoding, scientific simulation, and large-scale numerical analysis. As long as the computation can be broken into many small pieces, the GPU can process them together.
 
-![1774750285751](image/GPUArchitecture/1774750285751.png)
+---
 
-<Frame>
-    <img src="https://mintcdn.com/kodekloud-c4ac6d9a/k9suVL7cFPUhhb5j/images/Computer-Architecture/Graphics-Processing-Unit-GPU/GPU-Architecture/gpu-1000-cores-cpu-8-kodekloud.jpg?fit=max&auto=format&n=k9suVL7cFPUhhb5j&q=85&s=ad2525d3be9c4c35b06d2192dca4b6a0" alt="A stylized infographic comparing a GPU (shown with many small gradient squares and labeled "1,000+ Cores") to a CPU (eight larger gradient blocks labeled "8 Cores"). A presenter wearing a KodeKloud t-shirt stands at the right against a dark, tech-themed background." width="1920" height="1080" data-path="images/Computer-Architecture/Graphics-Processing-Unit-GPU/GPU-Architecture/gpu-1000-cores-cpu-8-kodekloud.jpg" />
-</Frame>
+## 3. 特殊核心 / Specialized Cores
 
-<Frame>
-    <img src="https://mintcdn.com/kodekloud-c4ac6d9a/k9suVL7cFPUhhb5j/images/Computer-Architecture/Graphics-Processing-Unit-GPU/GPU-Architecture/kodekloud-presenter-ai-training-infographic-factory.jpg?fit=max&auto=format&n=k9suVL7cFPUhhb5j&q=85&s=388b213e8b1442b34d9fdec6ca3eaa54" alt="A presenter in a black "KodeKloud" T-shirt stands at the right speaking with hands clasped. To the left is a purple-themed infographic showing a factory scene and a GPU cluster grid labeled "AI Training" with panels for Team A (Packaging), Team B (Assembling), and Team C (Quality Checking)." width="1920" height="1080" data-path="images/Computer-Architecture/Graphics-Processing-Unit-GPU/GPU-Architecture/kodekloud-presenter-ai-training-infographic-factory.jpg" />
-</Frame>
+中文：现代 GPU 已经不只是“很多简单核心”。它们还会加入特殊用途的核心，比如 Tensor Core、Matrix Core、RT Core 等，用来加速深度学习、矩阵运算或光线追踪任务。
 
-Specialized AI hardware
+English: Modern GPUs are no longer just “many simple cores.” They also include specialized units such as Tensor Cores, Matrix Cores, and RT Cores to accelerate deep learning, matrix operations, and ray tracing.
 
-Many modern GPUs include dedicated accelerators—tensor cores, matrix cores, or vendor-specific AI units—designed for dense matrix operations and mixed-precision math (FP16, BF16). These units dramatically increase throughput for neural-network operations. A training job that takes many hours on a general-purpose GPU can finish in a fraction of that time on a GPU with specialized AI cores.
+![Specialized cores](image/GPUArchitecture/1774750278991.png)
 
-![1774750297139](image/GPUArchitecture/1774750297139.png)
+中文：这些专用单元的意义在于把常见的重计算任务直接硬件化，从而把某些算法的执行速度提升到很高的水平。
 
-<Frame>
-    <img src="https://mintcdn.com/kodekloud-c4ac6d9a/k9suVL7cFPUhhb5j/images/Computer-Architecture/Graphics-Processing-Unit-GPU/GPU-Architecture/kodekloud-presenter-3x3-cube-specialized-cores.jpg?fit=max&auto=format&n=k9suVL7cFPUhhb5j&q=85&s=4700fd7e317883cd8097aa31bf338f11" alt="A dark tech-themed slide showing a glowing purple-pink 3x3 cube icon with buttons labeled "Tensor Core" and "Matrix Core" and a "Specialized Cores" banner. A presenter wearing a black KodeKloud T‑shirt appears at the right, speaking and gesturing." width="1920" height="1080" data-path="images/Computer-Architecture/Graphics-Processing-Unit-GPU/GPU-Architecture/kodekloud-presenter-3x3-cube-specialized-cores.jpg" />
-</Frame>
+English: The purpose of these specialized units is to move common heavy workloads directly into hardware, allowing certain algorithms to run much faster.
 
-Memory and data movement: VRAM matters
+---
 
-GPU cores only run as fast as they can get data. Video RAM (VRAM) is high-bandwidth memory attached directly to the GPU and stores textures, frame buffers, or large matrices for ML. Two key properties:
+## 4. VRAM 和带宽 / VRAM and Bandwidth
 
-* Capacity: how large a model or batch you can store on-device.
-* Bandwidth: how fast data moves between VRAM and compute cores.
+中文：GPU 不是只靠计算核心快，显存也很重要。VRAM 是 GPU 用来存放图像、模型、纹理、中间结果和工作数据的高速内存。对于 GPU 来说，显存的带宽和容量都非常关键。
 
-<Callout icon="lightbulb" color="#1CB2FE">
-  VRAM capacity and bandwidth are crucial for AI workloads: capacity limits the size of models and batch sizes you can process, while bandwidth reduces stalls by keeping compute units fed. Running out of VRAM forces data transfers or smaller batches, which slow training.
-</Callout>
+English: A GPU’s speed does not depend only on its compute cores. VRAM is also crucial. VRAM is the high-speed memory used to store images, models, textures, intermediate results, and working data. For GPUs, both bandwidth and capacity matter a great deal.
 
-<Frame>
-    <img src="https://mintcdn.com/kodekloud-c4ac6d9a/k9suVL7cFPUhhb5j/images/Computer-Architecture/Graphics-Processing-Unit-GPU/GPU-Architecture/gpu-vram-bandwidth-traffic-lanes-presenter.jpg?fit=max&auto=format&n=k9suVL7cFPUhhb5j&q=85&s=66cb223fac0f9e7a83a1bd3d7d470c85" alt="A presentation slide illustrating GPU and Video RAM with a traffic-lane analogy for low vs. high bandwidth on the left and a grid of GPU blocks on the right. A presenter stands at the lower-right corner explaining the diagram." width="1920" height="1080" data-path="images/Computer-Architecture/Graphics-Processing-Unit-GPU/GPU-Architecture/gpu-vram-bandwidth-traffic-lanes-presenter.jpg" />
-</Frame>
+![VRAM diagram](image/GPUArchitecture/1774750285751.png)
 
-![1774750325339](image/GPUArchitecture/1774750325339.png)
+中文：如果显存太小，GPU 就不得不频繁和主内存交换数据，性能会明显下降。因此，做 AI 或高分辨率图形任务时，VRAM 往往和核心数一样重要。
 
+English: If VRAM is too small, the GPU has to exchange data with main memory too often, and performance drops sharply. That is why in AI or high-resolution graphics workloads, VRAM is often just as important as core count.
 
+---
 
-Clock speed vs parallelism
+## 5. 频率、吞吐量和能效 / Frequency, Throughput, and Efficiency
 
-GPUs typically run at lower per-core clock speeds than CPUs (for example, `2.5 GHz` vs `5 GHz`), but they compensate by having orders of magnitude more cores. Think of a race car (`high single-thread speed`) versus a freight train (`lots of throughput`). GPU designs prioritize total operations per second over single-thread latency.
+中文：GPU 的时钟频率并不一定比 CPU 更高，但这并不妨碍它在并行任务中表现优异。GPU 的目标不是单线程极限速度，而是在大量核心上提供高吞吐量。
 
-![1774750337887](image/GPUArchitecture/1774750337887.png)
+English: A GPU does not necessarily run at a higher clock speed than a CPU, but that does not stop it from excelling at parallel tasks. A GPU’s goal is not maximum single-thread speed; it is high throughput across many cores.
 
-<Frame>
-    <img src="https://mintcdn.com/kodekloud-c4ac6d9a/k9suVL7cFPUhhb5j/images/Computer-Architecture/Graphics-Processing-Unit-GPU/GPU-Architecture/gpu-cpu-clock-speed-kodekloud-presenter.jpg?fit=max&auto=format&n=k9suVL7cFPUhhb5j&q=85&s=17266d5e1144f5f58555fdb3dd6c8aef" alt="A dark presentation slide showing stylized, colorful GPU and CPU icons with callouts reading "2.5GHz 16,000 GPU Cores" and "5GHz 16 Cores" under a "Clock Speed" banner. A man wearing a KodeKloud T‑shirt stands at the right as if presenting." width="1920" height="1080" data-path="images/Computer-Architecture/Graphics-Processing-Unit-GPU/GPU-Architecture/gpu-cpu-clock-speed-kodekloud-presenter.jpg" />
-</Frame>
+![Clock speed comparison](image/GPUArchitecture/1774750297139.png)
 
-Power and efficiency
+中文：随着硬件设计进步，现代 GPU 更重视每瓦性能，也就是在消耗更合理电力的前提下完成更多计算。早期高性能 GPU 可能非常耗电，而现代 GPU 更强调性能与能效的平衡。
 
-High-performance GPUs can draw hundreds of watts. Data centers running continuous AI workloads must account for power delivery and cooling. Modern GPU architectures emphasize performance-per-watt with dynamic boost clocks and power scaling to improve cost efficiency.
+English: As hardware design improved, modern GPUs place more emphasis on performance per watt, meaning they do more computation while consuming a more reasonable amount of power. Early high-performance GPUs could be extremely power-hungry, while modern GPUs focus more on balancing performance and efficiency.
 
-<Callout icon="warning" color="#FF6B6B">
-  High-performance GPUs require adequate cooling and power. When planning for continuous AI training, include power consumption and data-center cooling in hardware selection and total cost calculations.
-</Callout>
+![Energy efficiency](image/GPUArchitecture/1774750376889.png)
 
-<Frame>
-    <img src="https://mintcdn.com/kodekloud-c4ac6d9a/k9suVL7cFPUhhb5j/images/Computer-Architecture/Graphics-Processing-Unit-GPU/GPU-Architecture/kodekloud-gpu-comparison-performance-power.jpg?fit=max&auto=format&n=k9suVL7cFPUhhb5j&q=85&s=f51d2175c2bf0f4470912edb287f64be" alt="A presenter wearing a KodeKloud t-shirt stands beside a slide. The slide compares "High-Performance GPU" and "Modern GPU" with colorful cube illustrations and notes about power, performance-per-watt, and dynamic power scaling." width="1920" height="1080" data-path="images/Computer-Architecture/Graphics-Processing-Unit-GPU/GPU-Architecture/kodekloud-gpu-comparison-performance-power.jpg" />
-</Frame>
+---
 
-![1774750365982](image/GPUArchitecture/1774750365982.png)
+## 6. GPU 的内部组织 / Internal GPU Organization
 
+中文：GPU 里的核心通常被组织成大规模的计算阵列，任务被拆成许多线程一起运行。与 CPU 的少量复杂核心相比，GPU 更像是成批处理工人，每个人负责同类小任务。
 
+English: GPU cores are usually organized into large compute arrays, and tasks are split into many threads that run together. Compared with a CPU’s small number of complex cores, a GPU is more like a large group of workers each doing similar small jobs.
 
-Quick comparison table
+![Strength in numbers](image/GPUArchitecture/1774750337887.png)
 
-| Feature           |                                                    CPU | GPU                                                         |
-| ----------------- | -----------------------------------------------------: | ----------------------------------------------------------- |
-| Cores             | Few, powerful cores optimized for complex control flow | Thousands of simpler cores optimized for parallel workloads |
-| Processing model  |                  Serial / branching tasks, low latency | SIMD / SIMT parallelism, high throughput                    |
-| Specialized units |                    Vector units, general-purpose cores | Tensor/matrix cores for AI acceleration                     |
-| Memory            |                           System RAM (lower bandwidth) | High-bandwidth VRAM (higher throughput)                     |
-| Clock speed       |                 Higher per-core clocks (`~3–5 GHz`) | Lower per-core clocks (`~1–3 GHz`) but many cores        |
-| Energy            |  Optimized for response latency and single-thread perf | Performance-per-watt focus; can draw high total power       |
+中文：这就是为什么 GPU 在“很多相同计算一起做”的场景里特别高效。它不是为了一个任务特别聪明，而是为了很多任务一起做得更快。
 
-![1774750376889](image/GPUArchitecture/1774750376889.png)
+English: That is why GPUs are especially efficient in scenarios where many identical computations are performed together. They are not designed to be especially clever on one task; they are designed to make many tasks run faster together.
 
+---
 
-Choosing the right GPU for AI
+## 7. GPU 架构总结 / GPU Architecture Summary
 
-When selecting GPUs for training or inference, weigh:
+中文：GPU 的核心优势来自并行核心、专用加速单元、VRAM 和高吞吐量设计。它适合图像处理、AI、科学计算和其他能被拆成很多小任务的工作。
 
-* VRAM capacity: large models and big batch sizes require more memory.
-* Memory bandwidth: reduces stalls and speeds up compute.
-* Specialized cores: tensor/matrix cores accelerate common NN ops.
-* Power and cooling: ensure infrastructure can support continuous loads.
-* Price vs performance: the most expensive GPU isn’t always the best fit—consider workload characteristics (training, inference, or graphics) and cost efficiency.
+English: A GPU’s core strength comes from parallel cores, specialized accelerators, VRAM, and a throughput-oriented design. It is suitable for image processing, AI, scientific computing, and other workloads that can be split into many small tasks.
 
-References and further reading
+## Further Reading
 
-* [NVIDIA CUDA Documentation](https://developer.nvidia.com/cuda-zone)
-* [NVIDIA Tensor Cores overview](https://developer.nvidia.com/tensorcores)
-* [AMD GPU Architecture](https://www.amd.com/en/technologies/graphics-architecture)
-* [Deep Learning &amp; Mixed Precision Training](https://arxiv.org/abs/1710.03740)
-
-Now that you understand GPU architecture and how it differs from CPUs, you’re better equipped to pick hardware for AI training, inference, or graphics workloads.
-
-<CardGroup>
-  <Card title="Watch Video" icon="video" cta="Learn more" href="https://learn.kodekloud.com/user/courses/computer-architecture/module/e3c31d19-97a9-464e-b94f-5ff231dc9677/lesson/4e354eef-e308-46e6-aca0-5ff0325d8743" />
-</CardGroup>
-
-Built with [Mintlify](https://mintlify.com).
+- [Watch Video](https://learn.kodekloud.com/user/courses/computer-architecture/module/1a4d7f10-3ff2-4c31-b5de-7b8d2e6e84a8/lesson/gpu-architecture)

@@ -1,127 +1,103 @@
-# GPU Applications
+# GPU 应用 / GPU Applications
 
-> How GPUs accelerate AI, graphics, and scientific workloads by parallelizing large matrix computations, contrasted with CPU roles, and practical uses in gaming, research, medical imaging, and autonomous systems.
+> 中文：这是一份中英文对照的 GPU 应用笔记，重点解释 GPU 为什么适合大规模并行任务，以及它在科学研究、AI、图像处理、自动驾驶和医疗成像中的具体作用。
+>
+> English: This is a bilingual note on GPU applications, focused on why GPUs are well suited for large-scale parallel work and how they are used in scientific research, AI, image processing, autonomous driving, and medical imaging.
 
-When your phone suggests the next word as you type, it uses short, local patterns computed on-device. Modern large language models (LLMs) do something far more extensive: they analyze whole sentences, context, and statistical relationships across billions of words to generate coherent text.
+## 1. GPU 为什么会被广泛使用 / Why GPUs Are So Widely Used
 
-![1774750427142](image/GPUApplications/1774750427142.png)
+中文：GPU 最初是为图形渲染设计的，但它的核心优势并不只是在“画图”。真正重要的是它能同时处理大量结构相似、彼此独立的小任务。只要一个问题可以拆成很多并行的小计算，GPU 往往就能提供很高的吞吐量。
 
-<Frame>
-    <img src="https://mintcdn.com/kodekloud-c4ac6d9a/k9suVL7cFPUhhb5j/images/Computer-Architecture/Graphics-Processing-Unit-GPU/GPU-Applications/phone-mockups-predictive-chatgpt-darkmatter-kodekloud.jpg?fit=max&auto=format&n=k9suVL7cFPUhhb5j&q=85&s=964976fd6ce297de3f882fecbb297eff" alt="Two smartphone UI mockups are shown side-by-side — the left illustrating predictive text suggestions in a messaging app and the right displaying a ChatGPT-style response about dark matter. A presenter wearing a KodeKloud t-shirt stands to the right of the mockups." width="1920" height="1080" data-path="images/Computer-Architecture/Graphics-Processing-Unit-GPU/GPU-Applications/phone-mockups-predictive-chatgpt-darkmatter-kodekloud.jpg" />
-</Frame>
+English: GPUs were originally designed for graphics rendering, but their core strength is not only “drawing pictures.” What really matters is that they can process a huge number of similar, independent small tasks at the same time. If a problem can be split into many parallel computations, a GPU can often deliver very high throughput.
 
-Your phone handles short-pattern predictions locally and sequentially. LLMs must process massive datasets and perform trillions of numerical operations to learn language structure and generate responses. That scale is why GPU hardware is central to modern AI.
+中文：CPU 更适合复杂控制和逻辑分支，GPU 更适合大规模重复计算。也就是说，CPU 像总工程师，GPU 更像能同时开很多条生产线的工厂。这个差异决定了它们在现实世界里的应用范围。
 
-Why not rely only on CPUs? Consider this analogy:
+English: CPUs are better for complex control flow and branching logic, while GPUs are better for large-scale repeated computation. In other words, a CPU is like a chief engineer, while a GPU is like a factory that can run many production lines at once. That difference defines their roles in the real world.
 
-* A CPU is like a careful reader flipping through a dictionary entry by entry — excellent at complex, branching logic and low-latency tasks.
-* A GPU is like thousands of eyes scanning many pages in parallel — optimized for carrying out many similar calculations at once.
+![GPU applications overview](image/GPUApplications/1774750427142.png)
 
-AI training and inference depend heavily on linear algebra (large matrix multiplications and tensor operations). GPUs are architected for massive parallelism and high memory bandwidth, making them far faster than CPUs for these workloads. Training a model on CPUs would be impractically slow: days or weeks on GPUs could become months or years on CPUs.
+---
 
-Here’s a tiny numeric example resembling an isolated operation that’s part of much larger matrix computations during training or evaluation:
+## 2. AI 和自然语言处理 / AI and Natural Language Processing
 
-```python
-# Simple division example
-2788374 / 71134
-# Output: 39.19889223157
-```
+中文：像预测文本、聊天机器人和大语言模型这样的应用，都需要处理大量矩阵运算和向量运算。模型越大，参数越多，单次推理和训练中需要并行处理的数据量就越大。GPU 正是因为擅长这类并行数值计算，才成为 AI 工作负载的核心硬件之一。
 
-Before 2017 many sequence models processed tokens sequentially (for example using recurrent neural networks like LSTMs). The transformer architecture (introduced in 2017) changed this by using self-attention, enabling the model to compare tokens across the entire input in parallel. That shift to parallel token processing maps directly to GPU strengths.
+English: Applications such as predictive text, chatbots, and large language models rely on a huge amount of matrix and vector computation. The larger the model and the more parameters it has, the more data must be processed in parallel during training and inference. GPUs are especially good at this kind of parallel numerical work, which is why they became core hardware for AI workloads.
 
-<Callout icon="lightbulb" color="#1CB2FE">
-  Transformers process tokens in parallel using self-attention, producing many simultaneous matrix operations — exactly the sort of compute GPUs accelerate.
-</Callout>
+中文：你手机上的智能输入提示、对话式 AI 回复、语音转文字和图像识别，背后都可能有 GPU 在工作。用户看到的是一个简单按钮或一个流畅的回复，背后实际上是成千上万次并行计算。
 
-Because GPUs can execute the required dense linear algebra operations quickly and at scale, they made practical the widespread adoption of large conversational models used in chatbots, voice assistants, and semantic search. GPUs provide the compute density and VRAM bandwidth required to run these models interactively.
+English: Predictive text on your phone, chatbot replies, speech-to-text, and image recognition may all rely on GPUs behind the scenes. The user sees a simple suggestion or a smooth answer, but underneath there may be thousands of parallel computations taking place.
 
-Beyond AI: GPUs in science, engineering, and real-time systems
-GPUs accelerate many scientific and engineering problems by enabling large-scale parallel computation that turns multi-day or multi-week jobs into interactive or same-day results.
+![Predictive text vs chat response](image/GPUApplications/1774750437271.png)
 
-![1774750437271](image/GPUApplications/1774750437271.png)
+---
 
-<Frame>
-    <img src="https://mintcdn.com/kodekloud-c4ac6d9a/k9suVL7cFPUhhb5j/images/Computer-Architecture/Graphics-Processing-Unit-GPU/GPU-Applications/kodekloud-presenter-climate-models-gpu-apps.jpg?fit=max&auto=format&n=k9suVL7cFPUhhb5j&q=85&s=2bf9d0018fef8cc32422d4b7e4834275" alt="A presenter in a KodeKloud t-shirt gestures beside a slide. The slide shows a CO2/thermometer Earth icon labeled "Climate Models" and a "GPU Applications" menu listing scientific research, autonomous vehicles, and medical imaging." width="1920" height="1080" data-path="images/Computer-Architecture/Graphics-Processing-Unit-GPU/GPU-Applications/kodekloud-presenter-climate-models-gpu-apps.jpg" />
-</Frame>
+## 3. 科学研究与数据分析 / Scientific Research and Data Analysis
 
-Common GPU-accelerated domains:
+中文：科学研究经常要处理非常大的数据集，例如气候模型、分子模拟、天体物理和流体计算。这些任务通常可以拆成大量独立计算点，因此非常适合 GPU。与其让一个 CPU 核心慢慢处理，不如让 GPU 同时处理成百上千个计算单元。
 
-* Scientific research: climate simulations, molecular dynamics, and genomics pipelines run far faster using GPU kernels.
-* Autonomous vehicles: GPUs perform sensor fusion (camera, LiDAR, radar) and perception inference in real time.
-* Medical imaging: accelerated reconstruction and analysis for MRI and CT scans.
-* Cybersecurity: rapid anomaly detection across large log datasets.
-* Graphics and gaming: real-time rendering, shading, and ray tracing.
+English: Scientific research often involves very large datasets, such as climate models, molecular simulations, astrophysics, and fluid dynamics. These tasks can usually be split into many independent computation points, which makes them well suited to GPUs. Rather than having one CPU core work through everything slowly, a GPU can process hundreds or thousands of units in parallel.
 
-Platform teams and DevOps engineers ensure GPU workloads are efficient and cost-effective — handling scheduling, multi-tenant sharing, scaling, and monitoring for both research and production workloads.
+中文：这也是为什么 GPU 在科研、数据科学和工程仿真里越来越重要。它们不是只为“游戏画面”服务，而是为大量数值运算服务。
 
-![1774750443025](image/GPUApplications/1774750443025.png)
+English: That is why GPUs are becoming more important in research, data science, and engineering simulation. They are not only for “game graphics”; they are for massive numerical computation.
 
-<Frame>
-    <img src="https://mintcdn.com/kodekloud-c4ac6d9a/k9suVL7cFPUhhb5j/images/Computer-Architecture/Graphics-Processing-Unit-GPU/GPU-Applications/gpu-efficiency-bar-chart-devops-presenter.jpg?fit=max&auto=format&n=k9suVL7cFPUhhb5j&q=85&s=8584dc8d1df6ef008b92e04489d83cd1" alt="A slide showing a "GPU Efficiency" bar chart on the left and a cartoon figure labeled "DevOps Engineers" in the center. A presenter wearing a black KodeKloud t-shirt stands at the lower right." width="1920" height="1080" data-path="images/Computer-Architecture/Graphics-Processing-Unit-GPU/GPU-Applications/gpu-efficiency-bar-chart-devops-presenter.jpg" />
-</Frame>
+![GPU efficiency for research teams](image/GPUApplications/1774750443025.png)
 
-Practical example: CPU and GPU roles while gaming
-To see CPUs and GPUs in action, consider running a graphics-intensive game while watching system performance. This demonstrates how work is split across CPU cores and the GPU.
+<blockquote>
+中文：如果一个任务的计算结构非常规则，而且每一步都很相似，那么 GPU 往往会比 CPU 更高效。
 
-On many systems the CPU workload is shown as multiple separate core graphs (one per core), while GPU usage is shown as a single combined graph. At idle, both CPU and GPU are mostly unused. When the game launches, GPU usage typically jumps immediately.
+English: If a task has a very regular computation structure and each step looks similar, a GPU will often be more efficient than a CPU.
+</blockquote>
 
-![1774750449092](image/GPUApplications/1774750449092.png)
+---
 
-<Frame>
-    <img src="https://mintcdn.com/kodekloud-c4ac6d9a/k9suVL7cFPUhhb5j/images/Computer-Architecture/Graphics-Processing-Unit-GPU/GPU-Applications/splitscreen-performance-graphs-minecraft-kodekloud-man.jpg?fit=max&auto=format&n=k9suVL7cFPUhhb5j&q=85&s=32ec16980a73f6b4c71a6456f56b933b" alt="A split-screen showing system performance graphs (CPU cores and GPU) on the left and a Minecraft game at night on the right. A man wearing a black "KodeKloud" t‑shirt stands in the lower-right foreground." width="1920" height="1080" data-path="images/Computer-Architecture/Graphics-Processing-Unit-GPU/GPU-Applications/splitscreen-performance-graphs-minecraft-kodekloud-man.jpg" />
-</Frame>
+## 4. 自动驾驶和医疗成像 / Autonomous Vehicles and Medical Imaging
 
-The GPU spikes because it renders 3D geometry, shading, lighting, and textures in real time. The CPU also gets busier but usually to a lesser extent.
+中文：自动驾驶需要处理摄像头、雷达、激光雷达和地图数据，并快速做出判断。医疗成像也类似：CT、MRI、超声和病理图像都包含大量需要并行处理的数据。GPU 可以帮助这些系统更快完成图像重建、特征提取和模式识别。
 
-Why is the CPU still active?
+English: Autonomous driving systems need to process camera, radar, lidar, and map data, then make decisions quickly. Medical imaging is similar: CT, MRI, ultrasound, and pathology images all contain large amounts of data that need to be processed in parallel. GPUs help these systems perform image reconstruction, feature extraction, and pattern recognition faster.
 
-* Game logic and AI decision-making
-* Physics coordination and collision handling
-* Input processing and OS interactions
-* Asset streaming, file I/O, and orchestrating data transfers to the GPU
+中文：在这些场景中，速度不仅仅是“体验更好”，而是直接关系到安全和诊断效果。更快的计算意味着车辆能更快判断环境，医生也能更快查看和分析图像。
 
-  ![1774750458901](image/GPUApplications/1774750458901.png)
+English: In these scenarios, speed is not just about a better experience; it directly affects safety and diagnosis. Faster computation means a car can understand its environment sooner, and doctors can inspect and analyze images more quickly.
 
-<Frame>
-    <img src="https://mintcdn.com/kodekloud-c4ac6d9a/k9suVL7cFPUhhb5j/images/Computer-Architecture/Graphics-Processing-Unit-GPU/GPU-Applications/split-screen-cpu-gpu-minecraft-presenter.jpg?fit=max&auto=format&n=k9suVL7cFPUhhb5j&q=85&s=664f15c7dbbb7894112949cb49bacec6" alt="A split-screen screenshot showing CPU and GPU usage graphs on the left and a Minecraft game window on the right. A presenter wearing a KodeKloud t-shirt stands in the lower-right corner." width="1920" height="1080" data-path="images/Computer-Architecture/Graphics-Processing-Unit-GPU/GPU-Applications/split-screen-cpu-gpu-minecraft-presenter.jpg" />
-</Frame>
+---
 
-When you close the game, both GPU and CPU activity drop quickly as rendering and related tasks stop.
+## 5. 气候模型与复杂模拟 / Climate Models and Complex Simulation
 
-Quick summary: GPU vs CPU at a glance
+中文：气候模型是典型的 GPU 应用场景之一。大气、海洋、温度、云层、辐射和风场都可以被拆分成大量网格点，并在每个时间步进行计算。GPU 擅长这种“很多点一起算”的模式，因此很适合气候模拟。
 
-| Characteristic    |                                                       GPU | CPU                                                  |
-| ----------------- | --------------------------------------------------------: | :--------------------------------------------------- |
-| Best for          |               Thousands of similar, parallel computations | Complex, branching, low-latency tasks                |
-| Architecture      |                Many parallel cores; high memory bandwidth | Few powerful cores; deep pipelines and caches        |
-| Typical workloads | Matrix multiplications, image/vision inference, rendering | OS tasks, scheduling, control logic, sequential code |
-| Memory            |              High-bandwidth VRAM optimized for throughput | System RAM with lower bandwidth per channel          |
-| Examples          |       AI training/inference, scientific kernels, graphics | Game logic, I/O, database coordination               |
+English: Climate modeling is one of the classic GPU use cases. Atmosphere, oceans, temperature, cloud layers, radiation, and wind fields can all be split into many grid points and computed over each time step. GPUs are well suited to this “many points at once” pattern, which makes them ideal for climate simulation.
 
-Hardware components that matter for GPU workloads:
+![Climate models](image/GPUApplications/1774750458901.png)
 
-* Many parallel CUDA/OpenCL cores or tensor cores
-* High-bandwidth VRAM for fast data access
-* High throughput for compute-intensive kernels
+中文：这类任务的重点不是某一颗芯片“算得快”，而是整个系统能否在合理时间里处理海量并行数据。GPU 就在这里发挥了决定性作用。
 
-GPUs power a wide range of applications: gaming and real-time graphics, large-scale AI, scientific computing, medical imaging, autonomous systems, and cybersecurity.
+English: In these workloads, the point is not that one chip is “fast,” but that the whole system can process massive parallel data in a reasonable amount of time. That is where the GPU becomes decisive.
 
-Next up: memory and storage
-We'll next examine how CPUs and GPUs store, move, and access the data they need — including VRAM, system RAM, caches, and I/O paths.
+---
 
-![1774750465723](image/GPUApplications/1774750465723.png)
+## 6. GPU 的效率和价值 / GPU Efficiency and Value
 
-<Frame>
-    <img src="https://mintcdn.com/kodekloud-c4ac6d9a/k9suVL7cFPUhhb5j/images/Computer-Architecture/Graphics-Processing-Unit-GPU/GPU-Applications/3d-motherboard-labeled-components-person-kodekloud.jpg?fit=max&auto=format&n=k9suVL7cFPUhhb5j&q=85&s=8d99c3fe4e922bcbb14d79b7a75caa49" alt="A stylized 3D illustration of a motherboard with labeled components like CPU, RAM, storage, and ports on a dark background. A person stands on the right wearing a T‑shirt that reads "KodeKloud."" width="1920" height="1080" data-path="images/Computer-Architecture/Graphics-Processing-Unit-GPU/GPU-Applications/3d-motherboard-labeled-components-person-kodekloud.jpg" />
-</Frame>
+中文：GPU 的效率体现在它能用很多小核心同时做事。它不是像 CPU 那样专注于少量复杂分支，而是把计算拆得尽量细，然后用并行来换取总吞吐量。对于高度并行的任务，这种设计非常划算。
 
-Links and references
+English: The efficiency of a GPU comes from its ability to have many small cores work at once. It does not focus on a few complex branches the way a CPU does. Instead, it breaks computation into small pieces and uses parallelism to maximize total throughput. For highly parallel tasks, this design is extremely effective.
 
-* Transformer architecture: "Attention Is All You Need" (Vaswani et al., 2017) — [https://arxiv.org/abs/1706.03762](https://arxiv.org/abs/1706.03762)
-* Overview of GPU computing: NVIDIA CUDA documentation — [https://developer.nvidia.com/cuda-zone](https://developer.nvidia.com/cuda-zone)
-* GPU use in scientific computing: Examples from climate modeling and genomics research
-* Further reading on deep learning and hardware acceleration: common ML/AI textbooks and vendor guides
+中文：对于 DevOps、数据平台、AI 团队和研究团队来说，GPU 的价值不只是“更快”，还包括“更能处理规模化任务”。当工作负载越来越大时，GPU 常常比单纯堆 CPU 更合适。
 
-<CardGroup>
-  <Card title="Watch Video" icon="video" cta="Learn more" href="https://learn.kodekloud.com/user/courses/computer-architecture/module/e3c31d19-97a9-464e-b94f-5ff231dc9677/lesson/6910a132-0863-41bd-8764-43e3dc133f04" />
-</CardGroup>
+English: For DevOps teams, data platforms, AI teams, and research groups, the value of a GPU is not only that it is “faster,” but also that it handles scale much better. As workloads grow larger, GPUs are often a better fit than simply adding more CPU power.
+
+![GPU efficiency](image/GPUApplications/1774750465723.png)
+
+---
+
+## 7. 应用总结 / Application Summary
+
+中文：GPU 适合图像、视频、AI、科学计算、自动驾驶和医疗成像等场景。只要任务具备“同类计算多、并行度高、重复性强”这些特征，GPU 就很有优势。
+
+English: GPUs are well suited for graphics, video, AI, scientific computing, autonomous driving, and medical imaging. As long as a task has lots of similar computations, high parallelism, and strong repetition, a GPU usually has a major advantage.
+
+## Further Reading
+
+- [Watch Video](https://learn.kodekloud.com/user/courses/computer-architecture/module/1a4d7f10-3ff2-4c31-b5de-7b8d2e6e84a8/lesson/gpu-applications)

@@ -1,146 +1,155 @@
 # Cloud Security and Costs Part 2
 
-> Practical techniques and FinOps practices to control cloud spending—rightsizing, tagging, automated shutdowns, and commitment discounts to keep costs predictable while preserving agility
+> 云成本治理增强笔记：从 CapEx 到 OpEx 的思维迁移、服务与部署模型对成本的影响、FinOps 方法、以及可执行降本动作。
+>
+> Enhanced cloud cost governance note: mindset shift from CapEx to OpEx, cost implications of service and deployment models, FinOps practice, and executable optimization actions.
 
-Cloud makes it easy to launch and scale, but without guardrails costs can spiral quickly. This article shows practical, repeatable techniques to keep cloud spend predictable while preserving agility.
+## 1. 本节学习目标 / Learning Objectives
+
+本节的目标不是只会看账单，而是建立“成本可预测、责任可归属、动作可自动化”的治理体系。
+
+The objective is not just reading cloud bills, but building governance where cost is predictable, ownership is clear, and optimization actions are automatable.
+
+云的弹性和便捷会放大创新速度，也会放大浪费速度。没有规则时，资源增长通常比业务价值增长更快。
+
+Cloud elasticity and convenience accelerate innovation, but they can also accelerate waste. Without guardrails, resource growth often outpaces business value growth.
 
 ![1774968910294](image/CloudSecurityandCostsPart2/1774968910294.png)
 
-<Frame>
-    <img src="https://mintcdn.com/kodekloud-c4ac6d9a/XqMRTrEG2GqQdgEv/images/Cloud-Computing-Fundamentals/Cloud-Security-and-Costs/Cloud-Security-and-Costs-Part-2/purple-cloud-cost-chart-kodekloud-explainer.jpg?fit=max&auto=format&n=XqMRTrEG2GqQdgEv&q=85&s=54b8b0c4fabeec753eb0debbf4c5913f" alt="A purple cloud icon above a grid chart labeled "Cost" shows a neon line spiking upward on the left. On the right, a man in a black KodeKloud T-shirt is gesturing as if explaining." width="1920" height="1080" data-path="images/Cloud-Computing-Fundamentals/Cloud-Security-and-Costs/Cloud-Security-and-Costs-Part-2/purple-cloud-cost-chart-kodekloud-explainer.jpg" />
-</Frame>
+## 2. CapEx 到 OpEx 的迁移 / Shift from CapEx to OpEx
 
-## From CapEx to OpEx: how cloud changes spending
+传统机房时代，企业常在前期一次性投入硬件和机房资源，属于资本开支。云时代更多是按用量付费，属于运营开支，这带来更低门槛和更高波动。
 
-Before cloud, most IT spending was CapEx (capital expenditure): large up‑front investments in servers, networking, and datacenter space intended to be used for years. Cloud shifts that model toward OpEx (operational expenditure): you rent compute, storage, and other services on demand and pay based on usage (billing granularity varies by provider and service).
+In traditional datacenter models, organizations made large upfront investments in hardware and facilities, which are capital expenditures. Cloud moves many costs to usage-based operational spending, lowering entry barriers while increasing variability.
+
+这意味着成本管理从“采购决策”转向“持续运营决策”：每一次扩容、每一个未清理资源、每一条错误规格选择，都会体现在月账单上。
+
+This means cost management shifts from one-time procurement decisions to continuous operational decisions: every scale-out, every uncleared resource, and every wrong sizing choice appears on monthly bills.
 
 ![1774968929687](image/CloudSecurityandCostsPart2/1774968929687.png)
 
-<Frame>
-    <img src="https://mintcdn.com/kodekloud-c4ac6d9a/XqMRTrEG2GqQdgEv/images/Cloud-Computing-Fundamentals/Cloud-Security-and-Costs/Cloud-Security-and-Costs-Part-2/kodekloud-presenter-cloud-costs-slide.jpg?fit=max&auto=format&n=XqMRTrEG2GqQdgEv&q=85&s=4c80522477b3cf143186f26a60f6cf29" alt="A presenter wearing a black KodeKloud t‑shirt gestures on the right side of a dark slide. The slide shows AWS, Azure, and Google Cloud logos with purple "OpEX $$$" price tags above them." width="1920" height="1080" data-path="images/Cloud-Computing-Fundamentals/Cloud-Security-and-Costs/Cloud-Security-and-Costs-Part-2/kodekloud-presenter-cloud-costs-slide.jpg" />
-</Frame>
+## 3. 服务模型如何影响成本结构 / How Service Models Shape Cost Structure
 
-That on‑demand flexibility is powerful, but it can also make unexpected cost spikes possible. Two axes determine your control and cost profile: the service model and the deployment model.
+IaaS 给你更高控制权，也给你更多犯错空间。你可以精细优化，但如果长期过配，浪费会持续累积。
 
-## Service models: who manages what and where costs appear
+IaaS gives you greater control and also more room for mistakes. Fine-grained optimization is possible, but persistent overprovisioning accumulates waste.
 
-| Service Model                                | Who manages most of the stack               | Cost trade-offs                                                                                                 |
-| -------------------------------------------- | ------------------------------------------- | --------------------------------------------------------------------------------------------------------------- |
-| IaaS (Infrastructure as a Service)           | You manage VMs, networking, storage, and OS | More control and optimization opportunities — but also more ways to overspend if resources are overprovisioned |
-| PaaS / SaaS (Platform/Software as a Service) | Provider manages more layers                | Less operational burden; convenient but often higher per-unit cost for managed convenience                      |
+PaaS 与 SaaS 把更多运维责任交给平台，通常能提升交付效率，但单价不一定最低。是否划算取决于团队的人力成本和稳定性要求。
 
-
+PaaS and SaaS shift more operations to the provider, often increasing delivery speed, but not always minimizing unit cost. True efficiency depends on team labor cost and reliability requirements.
 
 ![1774969000097](image/CloudSecurityandCostsPart2/1774969000097.png)
 
+## 4. 部署模型与隐藏成本 / Deployment Models and Hidden Costs
 
+公有云适合波动业务与快速试错；私有云在合规和可控性上有优势但维护成本高；混合云兼顾迁移与特殊场景，但也引入跨平台协作和治理复杂度。
 
+Public cloud fits variable workloads and rapid experimentation; private cloud can support strict compliance and control at higher operational cost; hybrid cloud helps migration and special-case workloads but introduces cross-platform governance complexity.
 
-## Deployment models: cost implications
+很多团队低估了“复杂度成本”：多套网络、监控、身份体系并存时，排障与协同成本会显著上升。
 
-| Deployment Model | Typical cost profile                                                | Best for                                      |
-| ---------------- | ------------------------------------------------------------------- | --------------------------------------------- |
-| Public cloud     | Pay-for-what-you-use; good for bursty/unpredictable workloads       | Variable workloads, rapid scaling             |
-| Private cloud    | Higher upfront or ongoing costs for owned infrastructure            | Regulatory or performance-sensitive workloads |
-| Hybrid cloud     | Mix of both — can increase operational complexity and hidden costs | Gradual migration, special-case workloads     |
-
+Many teams underestimate complexity cost: when multiple network, monitoring, and identity systems coexist, troubleshooting and coordination overhead can rise sharply.
 
 ![1774969052783](image/CloudSecurityandCostsPart2/1774969052783.png)
 
+## 5. FinOps 不是工具，而是协作机制 / FinOps Is a Practice, Not a Tool
 
+FinOps 的核心是让技术、财务、业务共享同一套成本视图和决策节奏。目标不是单纯“降本”，而是在速度、质量、成本之间找到可持续平衡。
 
+FinOps aligns engineering, finance, and business on shared cost visibility and decision cadence. The goal is not cost reduction alone, but sustainable balance among speed, quality, and spend.
 
-## FinOps: governance for cloud costs
+有效的 FinOps 需要三个基础动作：资源可归属（标签与账单分摊）、异常可感知（预算与告警）、优化可执行（流程和自动化）。
 
-FinOps brings financial accountability into engineering teams by combining people, processes, and tooling. Its goal is predictable spend through visibility, ownership, and incentives that encourage cost-conscious decisions without slowing delivery.
+Effective FinOps needs three foundations: attributable resources (tagging and allocation), detectable anomalies (budgets and alerts), and executable optimization (process and automation).
 
 ![1774969064006](image/CloudSecurityandCostsPart2/1774969064006.png)
 
-<Frame>
-    <img src="https://mintcdn.com/kodekloud-c4ac6d9a/XqMRTrEG2GqQdgEv/images/Cloud-Computing-Fundamentals/Cloud-Security-and-Costs/Cloud-Security-and-Costs-Part-2/purple-finops-dashboard-avatars-kodekloud-man.jpg?fit=max&auto=format&n=XqMRTrEG2GqQdgEv&q=85&s=2f11438af51521dd4631929a459b540e" alt="A purple-themed FinOps dashboard with charts, graphs, and three circular avatar illustrations is shown on the left. On the right, a man in a black KodeKloud T‑shirt stands against a dark background." width="1920" height="1080" data-path="images/Cloud-Computing-Fundamentals/Cloud-Security-and-Costs/Cloud-Security-and-Costs-Part-2/purple-finops-dashboard-avatars-kodekloud-man.jpg" />
-</Frame>
+## 6. 常见成本陷阱与对应策略 / Common Cost Traps and Countermeasures
 
-<Callout icon="lightbulb" color="#1CB2FE">
-  FinOps is a cross-functional practice — not a single vendor product. Key activities include tagging, budgeting, cost allocation, and rightsizing so teams make predictable, accountable choices about cloud spend.
-</Callout>
+过度配置是最常见的浪费来源。很多团队担心未来增长而一次性选最大规格，但实际利用率长期偏低。
 
-Next, practical fixes for the most common cost traps.
+Overprovisioning is one of the most common waste patterns. Teams often choose maximum sizes for future safety while long-term utilization remains low.
 
-## Common cost traps and practical fixes
+非生产环境常年运行也是典型浪费。开发、测试、演示环境如果 24x7 开机，月度累计费用会非常可观。
 
-|                                       Cost Trap | Quick fix                            | Example action                                                                                                            |
-| ----------------------------------------------: | ------------------------------------ | ------------------------------------------------------------------------------------------------------------------------- |
-|                              Over‑provisioning | Rightsize resources based on metrics | Start small, monitor CPU/memory/disk/network, migrate to a cheaper instance family if utilization is low                  |
-|                     Idle non‑prod environments | Schedule automated shutdowns         | Use provider scheduler, cron jobs, or CI triggers to stop VMs outside business hours and start on demand                  |
-|                             Untracked resources | Tagging and ownership rules          | Enforce tags like `team`, `environment`, `project`, `cost-center`, `owner` and block untagged resource creation |
-| Long-term predictable capacity billed on-demand | Use commitment discounts             | Reserve capacity with Savings Plans, Reserved Instances, or Committed Use Discounts for 1–3 year terms                   |
-|                              Lack of visibility | FinOps dashboards and alerts         | Configure budgets, alerts, and cost allocation reports to detect anomalies early                                          |
+Always-on non-production environments are another major cost leak. Dev, test, and demo environments running 24x7 can accumulate substantial monthly spend.
 
-Right-sizing
+缺少标签会让账单不可解释。不能解释就无法归责，无法归责就难以持续优化。
 
-* Don’t pick top-end instances “just in case.” Rightsizing is matching resources to actual demand. Use cloud provider recommendations and rightsizing tools to identify cheaper instance types with comparable performance.
+Missing tagging makes bills hard to explain. If cost cannot be explained, ownership cannot be assigned; without ownership, optimization rarely sustains.
 
-Automate shutdowns
+## 7. 可执行的降本动作 / Executable Cost Optimization Actions
 
-* Non‑production environments often run 24/7. Schedule automated shutdowns outside business hours and provide automated startup scripts or CI jobs for on‑demand access — high ROI with low disruption.
+### 7.1 Right-Sizing 规格匹配
 
-Commitment discounts
+先小后大，按监控数据迭代调整。重点观察 CPU、内存、磁盘与网络指标的长期趋势，而不是某个峰值瞬间。
 
-* For steady, long-running workloads use reserved instances, savings plans, or committed-use discounts to reduce costs (savings can range widely by provider and commitment type).
+Start small and scale by metrics. Focus on long-term trends in CPU, memory, disk, and network rather than isolated spikes.
+
+### 7.2 自动关停非生产环境 / Automated Non-production Shutdowns
+
+为非生产资源设定工作时段策略，非工作时段自动关停；同时保留一键启动脚本，减少开发体验损失。
+
+Apply work-hour schedules for non-production resources and shut them down automatically off-hours, while keeping one-click startup workflows to preserve developer productivity.
+
+### 7.3 长期承诺折扣 / Commitment Discounts
+
+对于稳定可预测负载，使用 Reserved Instances、Savings Plans、Committed Use Discounts 可显著降低单价；但覆盖比例应基于真实历史利用率。
+
+For steady predictable workloads, Reserved Instances, Savings Plans, or Committed Use Discounts can reduce unit cost substantially; coverage ratios should be based on real historical utilization.
 
 ![1774969084566](image/CloudSecurityandCostsPart2/1774969084566.png)
 
-<Frame>
-    <img src="https://mintcdn.com/kodekloud-c4ac6d9a/XqMRTrEG2GqQdgEv/images/Cloud-Computing-Fundamentals/Cloud-Security-and-Costs/Cloud-Security-and-Costs-Part-2/kodekloud-presenter-2year-contract-70off-coins.jpg?fit=max&auto=format&n=XqMRTrEG2GqQdgEv&q=85&s=4c46437525523cd7cbe729e11e60c276" alt="A person stands on the right wearing a black "KodeKloud" T‑shirt, speaking or presenting. On the left is a purple illustrated 2-year contract with a "70% off" discount badge and a small stack of coins." width="1920" height="1080" data-path="images/Cloud-Computing-Fundamentals/Cloud-Security-and-Costs/Cloud-Security-and-Costs-Part-2/kodekloud-presenter-2year-contract-70off-coins.jpg" />
-</Frame>
+### 7.4 标签治理 / Tag Governance
 
-<Callout icon="warning" color="#FF6B6B">
-  Commitment discounts save money but add financial risk if usage drops. Evaluate historical utilization, consider partial coverage, and use convertible/ flexible plans where available.
-</Callout>
+建议至少强制以下标签：team、environment、project、cost-center、owner。并在资源创建流程中做缺失校验，避免后补标签。
 
-Tag everything
+At minimum, enforce tags such as team, environment, project, cost-center, and owner. Validate these at creation time to avoid unreliable retroactive tagging.
 
-* Large environments become hard to track. Tagging (or labeling) resources with metadata such as `team`, `environment` (`dev`/`staging`/`prod`), `project`, `cost-center`, and `owner` enables accurate cost allocation and cleanup. Enforce tag policies and use them in billing reports.
+## 8. 课堂判断题复盘 / Quiz Review
 
-## Quick assessment — pop quiz
+题目中正确项是“承诺计划可为可预测长期使用提供折扣”。其余选项要么混淆 CapEx/OpEx，要么误解 Right-Sizing 和 FinOps 概念。
 
-Pop quiz — which statement is true?
+The correct statement is that commitment plans offer discounts for predictable long-term usage. Other options confuse CapEx versus OpEx or misinterpret right-sizing and FinOps.
 
-A. Capital expenditure, or CapEx, refers to ongoing cloud costs paid monthly.
-B. Rightsizing means choosing the biggest server option to handle any future growth.
-C. FinOps is a cloud monitoring tool provided by AWS, Azure, and GCP.
-D. Commitment plans offer discounts for predictable long-term cloud usage.
+判断这类题时，建议抓三点：概念定义是否准确、责任边界是否清晰、是否把方法误当成产品。
+
+For similar questions, validate three things: conceptual definition accuracy, clear ownership boundaries, and whether a practice is mistakenly treated as a product.
 
 ![1774969099282](image/CloudSecurityandCostsPart2/1774969099282.png)
 
-<Frame>
-    <img src="https://mintcdn.com/kodekloud-c4ac6d9a/XqMRTrEG2GqQdgEv/images/Cloud-Computing-Fundamentals/Cloud-Security-and-Costs/Cloud-Security-and-Costs-Part-2/kodekloud-black-tshirt-cloud-mcq-slide.jpg?fit=max&auto=format&n=XqMRTrEG2GqQdgEv&q=85&s=fc5ef5978e69aebc8152a17943fe9fc2" alt="A person wearing a black KodeKloud t-shirt stands on the right beside a multiple-choice slide titled "Which of the following is TRUE?" listing four cloud-related statements labeled A–D." width="1920" height="1080" data-path="images/Cloud-Computing-Fundamentals/Cloud-Security-and-Costs/Cloud-Security-and-Costs-Part-2/kodekloud-black-tshirt-cloud-mcq-slide.jpg" />
-</Frame>
+## 9. 课堂外补充：把降本做成常态机制 / Extra: Making Optimization a Routine Mechanism
 
-Answer: D is correct.
+建议建立每周成本例会：看预算偏差、看异常增长、看本周可执行动作与责任人。
 
-* A is backwards: CapEx is upfront spending (on‑prem hardware); cloud typically uses OpEx (pay‑as‑you‑go).
-* B is incorrect: Rightsizing is about matching resources to actual needs, not overprovisioning.
-* C is incorrect: FinOps is a cross‑team practice and cultural approach, not a single monitoring product.
+Run a weekly cost review cadence: compare budget variance, investigate anomalies, and assign concrete optimization actions with clear owners.
 
-## Recap — practical checklist
+建议建立三层告警：预算阈值告警、服务级异常告警、资源级长时间空闲告警。三层组合能兼顾宏观和细节。
 
-* Understand CapEx vs OpEx: cloud converts many capital purchases into usage‑based operational spend.
-* Apply the basics: rightsizing, automating non‑prod shutdowns, using commitment discounts for steady workloads, and enforcing tagging for visibility.
-* Use FinOps principles to ensure teams have ownership, visibility, and incentives to control costs while moving quickly.
+Implement three alert layers: budget threshold alerts, service-level anomaly alerts, and resource-level idle-duration alerts. This combination balances macro visibility and micro actionability.
 
-You’ve now seen core techniques to manage cloud costs without sacrificing agility. Next, study provider-specific cost controls and security options to apply these practices in your environment.
+建议把成本指标并入工程目标，例如把单位请求成本、单位租户成本、资源利用率纳入团队看板，避免“只追性能不看费用”。
 
-## Links and references
+Integrate cost metrics into engineering scorecards, such as cost per request, cost per tenant, and utilization efficiency, so teams avoid optimizing performance while ignoring spend.
 
-* [FinOps Foundation](https://www.finops.org/) — practices and community resources
-* [Kubernetes cost optimization basics](https://kubernetes.io) — general guidance on resource requests/limits and cluster sizing
-* AWS Cost Management docs: [https://aws.amazon.com/aws-cost-management/](https://aws.amazon.com/aws-cost-management/)
-* Azure Cost Management: [https://learn.microsoft.com/azure/cost-management-billing/](https://learn.microsoft.com/azure/cost-management-billing/)
-* Google Cloud Billing: [https://cloud.google.com/billing](https://cloud.google.com/billing)
+## 10. 本节总结 / Final Summary
 
-<CardGroup>
-  <Card title="Watch Video" icon="video" cta="Learn more" href="https://learn.kodekloud.com/user/courses/cloud-computing-fundamentals/module/7725d0b0-e43d-41c5-978e-66f36b65cba7/lesson/1152b6c4-8e5e-4739-af00-34084e98e39a" />
-</CardGroup>
+本节核心是三句话：云成本是持续运营问题；FinOps 是协作与治理机制；降本要靠可执行动作和自动化闭环。
 
-Built with [Mintlify](https://mintlify.com).
+The lesson can be summarized in three statements: cloud cost is a continuous operations problem, FinOps is a collaborative governance mechanism, and optimization depends on executable actions plus automation loops.
+
+当你把 right-sizing、自动关停、承诺折扣、标签治理与预算告警组合起来，成本将从“月底惊吓”变成“可预测曲线”。
+
+When right-sizing, scheduled shutdowns, commitment discounts, tag governance, and budget alerts are combined, cloud cost shifts from end-of-month surprises to predictable curves.
+
+## 11. 复习清单 / Review Checklist
+
+- 你能否解释 CapEx 与 OpEx 在决策节奏上的区别？
+- 你能否说明 IaaS 与 PaaS/SaaS 在成本控制自由度上的差异？
+- 你能否给出一个团队级 FinOps 周期动作示例？
+- 你能否列出至少三条可立即执行的降本动作？
+
+- Can you explain the decision-cadence difference between CapEx and OpEx?
+- Can you describe how cost-control flexibility differs between IaaS and PaaS/SaaS?
+- Can you provide one example of a team-level FinOps weekly cycle?
+- Can you list at least three immediately executable optimization actions?

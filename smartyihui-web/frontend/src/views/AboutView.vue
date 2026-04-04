@@ -3,9 +3,9 @@
     <section class="about-hero">
       <div class="ah-inner">
         <div class="section-tag">关于我们</div>
-        <h1 class="ah-title">我们是一支<span class="gold">充满激情</span>的年轻技术团队</h1>
+        <h1 class="ah-title">我们是<span class="gold">充满激情</span>的年轻技术团队</h1>
         <p class="ah-sub">
-          广州熠辉智能科技有限公司成立于2026年，由华南师范大学在校生创立，
+          广州熠辉智能科技有限公司成立于2026年，
           专注为企业和个人提供高质量软件开发服务。我们相信好的技术可以改变商业。
         </p>
       </div>
@@ -15,7 +15,9 @@
       <div class="section-inner">
         <div class="vals-grid">
           <div class="val-card" v-for="v in values" :key="v.id">
-            <div class="val-icon">{{ v.icon }}</div>
+            <div class="val-icon">
+              <SvgIcon :name="v.icon" :size="32" />
+            </div>
             <h3>{{ v.title }}</h3>
             <p>{{ v.desc }}</p>
           </div>
@@ -41,7 +43,7 @@
             我们的团队成员具备扎实的编程基础，擅长网站开发、软件定制、小程序与小游戏开发，
             同时也欢迎志同道合的朋友加入我们一起成长。
           </p>
-          <a href="http://www.smart-space.cn" target="_blank" class="btn-outline" style="display:inline-flex;margin-top:16px">
+          <a href="http://www.smart-space.cn" target="_blank" rel="noopener noreferrer" class="btn-outline" style="display:inline-flex;margin-top:16px">
             访问智创空间 →
           </a>
         </div>
@@ -63,7 +65,9 @@
         </div>
         <div class="cert-list">
           <div class="cert-item" v-for="c in certs" :key="c.id">
-            <div class="cert-icon">{{ c.icon }}</div>
+            <div class="cert-icon">
+              <SvgIcon :name="c.icon" :size="36" />
+            </div>
             <h4>{{ c.title }}</h4>
             <p>{{ c.desc }}</p>
           </div>
@@ -74,11 +78,13 @@
 </template>
 
 <script setup>
+import SvgIcon from '@/components/SvgIcon.vue'
+
 const values = [
-  { id:1, icon:'🚀', title:'快速交付', desc:'敏捷开发，快速响应，最短时间内将您的想法变为现实' },
-  { id:2, icon:'💎', title:'品质优先', desc:'代码全部自主研发，注重代码质量与用户体验' },
-  { id:3, icon:'🤝', title:'诚信合作', desc:'正规注册企业，签合同、开发票，让合作有保障' },
-  { id:4, icon:'🌱', title:'持续成长', desc:'保持学习，紧跟技术前沿，与客户共同成长' },
+  { id:1, icon:'rocket', title:'快速交付', desc:'敏捷开发，快速响应，最短时间内将您的想法变为现实' },
+  { id:2, icon:'gem', title:'品质优先', desc:'代码全部自主研发，注重代码质量与用户体验' },
+  { id:3, icon:'handshake', title:'诚信合作', desc:'正规注册企业，签合同、开发票，让合作有保障' },
+  { id:4, icon:'sprout', title:'持续成长', desc:'保持学习，紧跟技术前沿，与客户共同成长' },
 ]
 const facts = [
   { id:1, num:'2026', label:'公司成立年份' },
@@ -87,10 +93,10 @@ const facts = [
   { id:4, num:'100%', label:'代码自主研发' },
 ]
 const certs = [
-  { id:1, icon:'📄', title:'营业执照', desc:'广州市市场监督管理局正式注册，统一社会信用代码齐全' },
-  { id:2, icon:'🧾', title:'可开正规发票', desc:'公司具备开具增值税发票的资质，满足企业报账需求' },
-  { id:3, icon:'📋', title:'合同签署', desc:'所有合作均可签署正式合同，明确权责，保障双方利益' },
-  { id:4, icon:'🏢', title:'实习证明', desc:'可为合作/实习人员提供正式公司盖章的实习证明文件' },
+  { id:1, icon:'file-text', title:'营业执照', desc:'广州市市场监督管理局正式注册，统一社会信用代码齐全' },
+  { id:2, icon:'receipt', title:'可开正规发票', desc:'公司具备开具增值税发票的资质，满足企业报账需求' },
+  { id:3, icon:'clipboard', title:'合同签署', desc:'所有合作均可签署正式合同，明确权责，保障双方利益' },
+  { id:4, icon:'building', title:'实习证明', desc:'可为合作/实习人员提供正式公司盖章的实习证明文件' },
 ]
 </script>
 
@@ -110,6 +116,7 @@ const certs = [
   margin: 16px 0 20px;
   line-height: 1.3;
 }
+.gold { color: var(--gold); }
 .ah-sub { color: var(--ink-soft); font-size: 16px; line-height: 1.8; }
 
 .about-values { background: #f8fafc; }
@@ -124,7 +131,11 @@ const certs = [
   transition: all 0.3s;
 }
 .val-card:hover { transform: translateY(-4px); box-shadow: 0 12px 30px rgba(0,0,0,0.07); }
-.val-icon { font-size: 32px; margin-bottom: 14px; }
+.val-icon {
+  color: var(--gold);
+  margin-bottom: 14px;
+  display: flex;
+}
 .val-card h3 { font-size: 17px; font-weight: 700; margin-bottom: 8px; }
 .val-card p { color: var(--ink-soft); font-size: 14px; line-height: 1.7; }
 
@@ -135,6 +146,24 @@ const certs = [
   gap: 60px;
   align-items: start;
 }
+.section-inner {
+  max-width: 1200px; margin: 0 auto;
+  padding: 100px 32px;
+}
+.section-header { text-align: center; margin-bottom: 60px; }
+.section-tag {
+  display: inline-block;
+  padding: 5px 14px; border-radius: 999px;
+  background: var(--gold-bg); color: var(--gold);
+  font-size: 13px; font-weight: 700;
+  margin-bottom: 16px;
+}
+.section-title {
+  font-family: 'Noto Serif SC', serif;
+  font-size: clamp(28px, 3vw, 40px);
+  font-weight: 700; margin-bottom: 16px;
+}
+.section-desc { color: var(--ink-soft); font-size: 16px; max-width: 560px; margin: 0 auto; }
 .story-text { display: flex; flex-direction: column; gap: 14px; }
 .story-text p { color: var(--ink-soft); font-size: 15px; line-height: 1.8; }
 .story-text strong { color: var(--gold); }
@@ -173,7 +202,12 @@ const certs = [
   transition: all 0.3s;
 }
 .cert-item:hover { border-color: var(--gold); box-shadow: 0 8px 24px rgba(200,151,58,0.1); }
-.cert-icon { font-size: 36px; margin-bottom: 12px; }
+.cert-icon {
+  color: var(--gold);
+  margin-bottom: 12px;
+  display: flex;
+  justify-content: center;
+}
 .cert-item h4 { font-size: 16px; font-weight: 700; margin-bottom: 8px; }
 .cert-item p { color: var(--ink-soft); font-size: 13px; line-height: 1.7; }
 

@@ -15,7 +15,9 @@
           <h2>联系方式</h2>
           <div class="info-list">
             <div class="info-item" v-for="item in infos" :key="item.id">
-              <div class="info-icon">{{ item.icon }}</div>
+              <div class="info-icon">
+                <SvgIcon :name="item.icon" :size="22" />
+              </div>
               <div>
                 <div class="info-label">{{ item.label }}</div>
                 <div class="info-value">{{ item.value }}</div>
@@ -24,7 +26,9 @@
           </div>
 
           <div class="map-placeholder">
-            <div class="map-pin">📍</div>
+            <div class="map-pin-icon">
+              <SvgIcon name="map-pin" :size="36" />
+            </div>
             <p>广州市天河区<br/>中山大道建中路5号</p>
           </div>
         </div>
@@ -35,29 +39,37 @@
           <form class="contact-form" @submit.prevent="handleSubmit">
             <div class="form-row">
               <div class="field">
-                <label>您的姓名 *</label>
-                <input v-model="form.name" type="text" placeholder="请输入您的姓名" required />
+                <label for="contact-name">您的姓名 *</label>
+                <input id="contact-name" v-model="form.name" type="text" placeholder="请输入您的姓名" required />
               </div>
               <div class="field">
-                <label>联系电话 *</label>
-                <input v-model="form.phone" type="tel" placeholder="请输入您的手机号" required />
+                <label for="contact-phone">联系电话 *</label>
+                <input
+                  id="contact-phone"
+                  v-model="form.phone"
+                  type="tel"
+                  placeholder="请输入您的手机号"
+                  :class="{ 'input-error': phoneError }"
+                  required
+                />
+                <span v-if="phoneError" class="field-error" role="alert">{{ phoneError }}</span>
               </div>
             </div>
             <div class="field">
-              <label>项目类型</label>
-              <select v-model="form.type">
+              <label for="contact-type">项目类型</label>
+              <select id="contact-type" v-model="form.type">
                 <option value="">请选择项目类型</option>
                 <option v-for="t in projectTypes" :key="t" :value="t">{{ t }}</option>
               </select>
             </div>
             <div class="field">
-              <label>需求描述 *</label>
-              <textarea v-model="form.desc" rows="5" placeholder="请简单描述您的项目需求、功能点、预算等..." required></textarea>
+              <label for="contact-desc">需求描述 *</label>
+              <textarea id="contact-desc" v-model="form.desc" rows="5" placeholder="请简单描述您的项目需求、功能点、预算等..." required></textarea>
             </div>
-            <button type="submit" class="btn-submit-form" :disabled="submitting">
-              {{ submitting ? '发送中...' : '发送需求 →' }}
+            <button type="submit" class="btn-submit-form" :disabled="submitting || submitOk">
+              {{ submitting ? '发送中...' : submitOk ? '已发送 ✓' : '发送需求 →' }}
             </button>
-            <p v-if="submitMsg" class="submit-msg" :class="{ success: submitOk }">{{ submitMsg }}</p>
+            <p v-if="submitMsg" class="submit-msg" :class="{ success: submitOk }" role="alert">{{ submitMsg }}</p>
           </form>
         </div>
       </div>
@@ -70,11 +82,21 @@
           <h2 class="section-title">您可能想问的问题</h2>
         </div>
         <div class="faq-list">
-          <div class="faq-item" v-for="faq in faqs" :key="faq.id"
-            @click="faq.open = !faq.open" :class="{ open: faq.open }">
+          <div
+            class="faq-item"
+            v-for="faq in faqs"
+            :key="faq.id"
+            role="button"
+            tabindex="0"
+            :aria-expanded="faq.open"
+            @click="faq.open = !faq.open"
+            @keydown.enter.prevent="faq.open = !faq.open"
+            @keydown.space.prevent="faq.open = !faq.open"
+            :class="{ open: faq.open }"
+          >
             <div class="faq-q">
               <span>{{ faq.q }}</span>
-              <span class="faq-arrow">{{ faq.open ? '▲' : '▼' }}</span>
+              <SvgIcon name="chevron-down" :size="16" class="faq-arrow" :class="{ 'is-open': faq.open }" />
             </div>
             <div class="faq-a" v-if="faq.open">{{ faq.a }}</div>
           </div>
@@ -86,27 +108,46 @@
 
 <script setup>
 import { ref, reactive } from 'vue'
+import axios from 'axios'
+import SvgIcon from '@/components/SvgIcon.vue'
 
 const form = reactive({ name: '', phone: '', type: '', desc: '' })
 const submitting = ref(false)
 const submitMsg = ref('')
 const submitOk = ref(false)
+const phoneError = ref('')
+
+// 中国大陆手机号格式：1 开头，第二位 3-9，共 11 位
+const PHONE_RE = /^1[3-9]\d{9}$/
+
+function validatePhone() {
+  if (!form.phone) {
+    phoneError.value = '请输入手机号'
+    return false
+  }
+  if (!PHONE_RE.test(form.phone)) {
+    phoneError.value = '请输入有效的 11 位手机号'
+    return false
+  }
+  phoneError.value = ''
+  return true
+}
 
 const projectTypes = [
   '企业官网', '电商平台', '管理后台系统', '微信小程序', '微信小游戏', 'H5页面', 'App开发', '其他'
 ]
 
 const infos = [
-  { id:1, icon:'📍', label:'公司地址', value:'广州市天河区中山大道建中路5号' },
-  { id:2, icon:'🏢', label:'公司全称', value:'广州熠辉智能科技有限公司' },
-  { id:3, icon:'🌐', label:'官方网站', value:'www.smartyihui.com' },
+  { id:1, icon:'map-pin', label:'公司地址', value:'广州市天河区中山大道建中路5号' },
+  { id:2, icon:'building', label:'公司全称', value:'广州熠辉智能科技有限公司' },
+  { id:3, icon:'globe', label:'官方网站', value:'www.smartyihui.com' },
 ]
 
 const faqs = ref([
   { id:1, q:'开发一个网站大概需要多少钱？', open: false,
     a:'价格根据功能复杂度而定，简单的企业官网通常在几千元，带后台管理系统的网站在1万元左右。欢迎联系我们获取具体报价。' },
   { id:2, q:'开发周期一般是多久？', open: false,
-    a:'简单官网1-2周，小程序2-4周，复杂系统视功能量而定。我们会在签合同前给出明确的排期计划。' },
+    a:'简单官网1-2周，小程序2-5周，复杂系统视功能量而定。我们会在签合同前给出明确的排期计划。' },
   { id:3, q:'你们是否可以提供合同和发票？', open: false,
     a:'是的，我们是正规注册的有限责任公司，可以签署正式合同并开具增值税发票，满足企业报账需求。' },
   { id:4, q:'代码和版权归谁所有？', open: false,
@@ -116,14 +157,37 @@ const faqs = ref([
 ])
 
 async function handleSubmit() {
+  // 手机号格式校验（在浏览器 required 之后额外校验）
+  if (!validatePhone()) return
+
+  // 防重复提交：提交中或已成功时直接返回
+  if (submitting.value || submitOk.value) return
+
   submitting.value = true
   submitMsg.value = ''
-  // 模拟发送（实际可接入邮件或企业微信机器人）
-  await new Promise(r => setTimeout(r, 1000))
-  submitOk.value = true
-  submitMsg.value = '✅ 需求已发送！我们将在24小时内联系您'
-  submitting.value = false
-  form.name = ''; form.phone = ''; form.type = ''; form.desc = ''
+
+  try {
+    // ── 对接后端接口(这里需要把接口按照格式填写好,我再接上去) ────────────────────────────────────────────
+    // 将下方 URL 替换为实际接口地址，例如：
+    //   POST https://www.smartyihui.com/api/contact
+    // 请求体字段：{ name, phone, type, desc }
+    // ────────────────────────────────────────────────────────────
+    await axios.post('/* TODO: 填入后端接口地址 */', {
+      name: form.name,
+      phone: form.phone,
+      type: form.type,
+      desc: form.desc,
+    })
+
+    submitOk.value = true
+    submitMsg.value = '需求已发送！我们将在24小时内联系您'
+    form.name = ''; form.phone = ''; form.type = ''; form.desc = ''
+  } catch (e) {
+    submitOk.value = false
+    submitMsg.value = e.response?.data?.message || '发送失败，请稍后重试或直接联系我们'
+  } finally {
+    submitting.value = false
+  }
 }
 </script>
 
@@ -142,6 +206,7 @@ async function handleSubmit() {
   font-weight: 700; color: #fff;
   margin: 16px 0 16px; line-height: 1.3;
 }
+.gold { color: var(--gold); }
 .ch-sub { color: rgba(255,255,255,0.6); font-size: 16px; }
 
 .contact-main { background: #f8fafc; }
@@ -165,7 +230,7 @@ async function handleSubmit() {
   background: #fff; border-radius: 12px;
   border: 1px solid var(--border);
 }
-.info-icon { font-size: 22px; flex-shrink: 0; }
+.info-icon { color: var(--gold); flex-shrink: 0; display: flex; }
 .info-label { font-size: 12px; color: var(--ink-mute); margin-bottom: 3px; font-weight: 600; }
 .info-value { font-size: 14px; color: var(--ink); font-weight: 500; }
 
@@ -176,7 +241,12 @@ async function handleSubmit() {
   text-align: center;
   color: rgba(255,255,255,0.7);
 }
-.map-pin { font-size: 36px; margin-bottom: 12px; }
+.map-pin-icon {
+  color: var(--gold-lt);
+  margin-bottom: 12px;
+  display: flex;
+  justify-content: center;
+}
 .map-placeholder p { font-size: 14px; line-height: 1.8; color: rgba(255,255,255,0.6); }
 
 .contact-form-wrap {
@@ -199,6 +269,9 @@ async function handleSubmit() {
 }
 .field textarea { resize: vertical; }
 .field input:focus, .field select:focus, .field textarea:focus { border-color: var(--gold); }
+.field .input-error { border-color: #e53e3e; }
+.field .input-error:focus { border-color: #e53e3e; }
+.field-error { font-size: 12px; color: #e53e3e; margin-top: 2px; }
 
 .btn-submit-form {
   background: var(--gold); color: #fff;
@@ -213,13 +286,32 @@ async function handleSubmit() {
 .submit-msg.success { color: #38a169; }
 
 /* FAQ */
+.section-inner {
+  max-width: 1200px; margin: 0 auto;
+  padding: 100px 32px;
+}
+.section-header { text-align: center; margin-bottom: 60px; }
+.section-tag {
+  display: inline-block;
+  padding: 5px 14px; border-radius: 999px;
+  background: var(--gold-bg); color: var(--gold);
+  font-size: 13px; font-weight: 700;
+  margin-bottom: 16px;
+}
+.section-title {
+  font-family: 'Noto Serif SC', serif;
+  font-size: clamp(28px, 3vw, 40px);
+  font-weight: 700; margin-bottom: 16px;
+}
 .faq-section { background: #fff; }
 .faq-list { max-width: 760px; margin: 0 auto; display: flex; flex-direction: column; gap: 12px; }
 .faq-item {
   border: 1.5px solid var(--border); border-radius: 14px;
   overflow: hidden; cursor: pointer;
   transition: border-color 0.2s;
+  outline: none;
 }
+.faq-item:focus-visible { box-shadow: 0 0 0 3px rgba(200,151,58,0.35); }
 .faq-item.open { border-color: var(--gold); }
 .faq-q {
   display: flex; justify-content: space-between; align-items: center;
@@ -227,7 +319,12 @@ async function handleSubmit() {
   font-size: 15px; font-weight: 600;
   user-select: none;
 }
-.faq-arrow { color: var(--gold); font-size: 12px; }
+.faq-arrow {
+  color: var(--gold);
+  flex-shrink: 0;
+  transition: transform 0.2s ease;
+}
+.faq-arrow.is-open { transform: rotate(180deg); }
 .faq-a {
   padding: 0 20px 18px;
   font-size: 14px; color: var(--ink-soft); line-height: 1.8;

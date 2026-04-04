@@ -9,13 +9,3 @@ export const apiClient = axios.create({
     'Content-Type': 'application/json',
   },
 })
-
-export async function fetchMessages() {
-  const { data } = await apiClient.get('/api/messages')
-  return data
-}
-
-export async function createMessage(content) {
-  const { data } = await apiClient.post('/api/messages', { content })
-  return data
-}

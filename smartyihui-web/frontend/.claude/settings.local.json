@@ -1,0 +1,7 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(node -e \"import\\(''''./src/router/index.js''''\\).then\\(m => console.log\\(''''router ok''''\\)\\).catch\\(e => console.error\\(e\\)\\)\")"
+    ]
+  }
+}

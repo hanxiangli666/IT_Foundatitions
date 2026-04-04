@@ -17,14 +17,20 @@
 
         <div class="nav-actions">
           <button class="btn-login" @click="showLogin = true">登录 / 注册</button>
-          <button class="hamburger" @click="menuOpen = !menuOpen" aria-label="菜单">
+          <button
+            class="hamburger"
+            @click="menuOpen = !menuOpen"
+            :aria-expanded="menuOpen"
+            aria-controls="mobile-menu"
+            aria-label="菜单"
+          >
             <span></span><span></span><span></span>
           </button>
         </div>
       </div>
 
       <!-- 移动端菜单 -->
-      <div class="mobile-menu" v-if="menuOpen">
+      <div id="mobile-menu" class="mobile-menu" v-if="menuOpen">
         <router-link to="/" @click="menuOpen = false">首页</router-link>
         <router-link to="/about" @click="menuOpen = false">关于我们</router-link>
         <router-link to="/services" @click="menuOpen = false">服务项目</router-link>
@@ -34,7 +40,11 @@
     </header>
 
     <main>
-      <router-view />
+      <router-view v-slot="{ Component }">
+        <transition name="page" mode="out-in">
+          <component :is="Component" :key="$route.path" />
+        </transition>
+      </router-view>
     </main>
 
     <footer class="site-footer">
@@ -49,10 +59,19 @@
     </footer>
 
     <!-- 登录/注册弹窗 -->
-    <div class="modal-overlay" v-if="showLogin" @click.self="showLogin = false">
+    <div
+      class="modal-overlay"
+      v-if="showLogin"
+      @click.self="showLogin = false"
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="modal-title"
+    >
       <div class="modal-box">
-        <button class="modal-close" @click="showLogin = false">✕</button>
-        <div class="modal-tabs">
+        <button class="modal-close" @click="showLogin = false" aria-label="关闭">
+          <SvgIcon name="x" :size="16" />
+        </button>
+        <div class="modal-tabs" id="modal-title">
           <button :class="{ active: authTab === 'login' }" @click="authTab = 'login'">登录</button>
           <button :class="{ active: authTab === 'register' }" @click="authTab = 'register'">注册</button>
         </div>
@@ -110,6 +129,7 @@
 <script setup>
 import { ref, onMounted, onUnmounted } from 'vue'
 import axios from 'axios'
+import SvgIcon from '@/components/SvgIcon.vue'
 
 const isScrolled = ref(false)
 const menuOpen = ref(false)
@@ -392,5 +412,19 @@ main { flex: 1; }
   .hamburger { display: flex; }
   .navbar-inner { padding: 16px 20px; }
   .btn-login { display: none; }
+}
+
+/* ── PAGE TRANSITION ── */
+.page-enter-active,
+.page-leave-active {
+  transition: opacity 0.18s ease, transform 0.18s ease;
+}
+.page-enter-from {
+  opacity: 0;
+  transform: translateY(8px);
+}
+.page-leave-to {
+  opacity: 0;
+  transform: translateY(-8px);
 }
 </style>

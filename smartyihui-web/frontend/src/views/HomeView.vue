@@ -1,4 +1,5 @@
 <template>
+  <div class="home-root">
   <!-- Hero 封面 -->
   <section class="hero">
     <div class="hero-bg">
@@ -66,7 +67,7 @@
       </div>
     </div>
     <!-- 滚动提示 -->
-    <div class="scroll-hint">
+    <div class="scroll-hint" aria-hidden="true">
       <span>向下滚动</span>
       <div class="scroll-arrow"></div>
     </div>
@@ -82,7 +83,9 @@
       </div>
       <div class="services-grid">
         <div class="srv-card" v-for="svc in services" :key="svc.id" :style="`--acc: ${svc.color}`">
-          <div class="srv-icon">{{ svc.icon }}</div>
+          <div class="srv-icon">
+            <SvgIcon :name="svc.icon" :size="36" />
+          </div>
           <h3>{{ svc.title }}</h3>
           <p>{{ svc.desc }}</p>
           <ul class="srv-tags">
@@ -106,12 +109,14 @@
       </div>
       <div class="platform-list">
         <div class="platform-item" v-for="p in platforms" :key="p.id">
-          <div class="platform-icon">{{ p.icon }}</div>
+          <div class="platform-icon">
+            <SvgIcon :name="p.icon" :size="32" />
+          </div>
           <div class="platform-info">
             <h4>{{ p.name }}</h4>
             <p>{{ p.desc }}</p>
           </div>
-          <a v-if="p.link" :href="p.link" target="_blank" class="platform-link">体验</a>
+          <a v-if="p.link" :href="p.link" target="_blank" rel="noopener noreferrer" class="platform-link">体验</a>
         </div>
       </div>
     </div>
@@ -142,30 +147,33 @@
       <router-link to="/contact" class="btn-primary lg">立即联系我们</router-link>
     </div>
   </section>
+  </div>
 </template>
 
 <script setup>
+import SvgIcon from '@/components/SvgIcon.vue'
+
 const services = [
   {
-    id: 1, icon: '🌐', color: '#3b82f6',
+    id: 1, icon: 'globe', color: '#3b82f6',
     title: '网站开发',
     desc: '企业官网、商城、管理后台，响应式设计适配所有终端',
     tags: ['Vue / React', '响应式', 'SEO优化', '后台管理']
   },
   {
-    id: 2, icon: '⚙️', color: '#c8973a',
+    id: 2, icon: 'settings', color: '#c8973a',
     title: '软件定制开发',
     desc: '根据业务需求量身定制，提供完整的前后端一体化解决方案',
     tags: ['需求分析', '架构设计', 'API开发', '持续维护']
   },
   {
-    id: 3, icon: '📱', color: '#10b981',
+    id: 3, icon: 'smartphone', color: '#10b981',
     title: '微信小程序',
     desc: '覆盖电商、预约、社区等场景，快速触达微信生态10亿用户',
     tags: ['原生开发', 'Taro跨端', '云开发', '支付接入']
   },
   {
-    id: 4, icon: '🎮', color: '#8b5cf6',
+    id: 4, icon: 'gamepad', color: '#8b5cf6',
     title: '小游戏开发',
     desc: '休闲益智、H5小游戏，支持微信小游戏平台上线与变现',
     tags: ['Cocos', 'Phaser', '微信平台', '广告变现']
@@ -173,10 +181,10 @@ const services = [
 ]
 
 const platforms = [
-  { id: 1, icon: '🖥️', name: '网页版', desc: '无需下载，打开浏览器即可使用，支持PC与移动端', link: 'https://www.smartyihui.com' },
-  { id: 2, icon: '💬', name: '微信小游戏', desc: '在微信内直接体验，分享传播方便', link: null },
-  { id: 3, icon: '📲', name: '手机App', desc: '打包为Android / iOS 应用，原生性能体验', link: null },
-  { id: 4, icon: '🖱️', name: '桌面端', desc: '打包为Windows / macOS 桌面应用', link: null },
+  { id: 1, icon: 'monitor', name: '网页版', desc: '无需下载，打开浏览器即可使用，支持PC与移动端', link: 'https://www.smartyihui.com' },
+  { id: 2, icon: 'message-circle', name: '微信小游戏', desc: '在微信内直接体验，分享传播方便', link: null },
+  { id: 3, icon: 'smartphone', name: '手机App', desc: '打包为Android / iOS 应用，原生性能体验', link: null },
+  { id: 4, icon: 'mouse', name: '桌面端', desc: '打包为Windows / macOS 桌面应用', link: null },
 ]
 
 const whys = [
@@ -188,6 +196,8 @@ const whys = [
 </script>
 
 <style scoped>
+.home-root { display: block; }
+
 /* ── HERO ── */
 .hero {
   min-height: 100vh;
@@ -358,7 +368,11 @@ const whys = [
   box-shadow: 0 16px 40px rgba(0,0,0,0.08);
   border-color: var(--acc);
 }
-.srv-icon { font-size: 36px; margin-bottom: 16px; }
+.srv-icon {
+  color: var(--acc);
+  margin-bottom: 16px;
+  display: flex;
+}
 .srv-card h3 { font-size: 18px; font-weight: 700; margin-bottom: 10px; }
 .srv-card p { color: var(--ink-soft); font-size: 14px; margin-bottom: 16px; line-height: 1.7; }
 .srv-tags {
@@ -387,7 +401,11 @@ const whys = [
   transition: all 0.25s;
 }
 .platform-item:hover { border-color: var(--gold); background: var(--gold-bg); }
-.platform-icon { font-size: 32px; flex-shrink: 0; }
+.platform-icon {
+  color: var(--gold);
+  flex-shrink: 0;
+  display: flex;
+}
 .platform-info { flex: 1; }
 .platform-info h4 { font-size: 16px; font-weight: 700; margin-bottom: 4px; }
 .platform-info p { font-size: 13px; color: var(--ink-mute); }

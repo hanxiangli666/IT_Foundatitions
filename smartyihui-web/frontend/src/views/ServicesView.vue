@@ -1,10 +1,16 @@
 <template>
   <div class="page-top-pad">
     <section class="srv-hero">
+      <div class="srv-hero-bg" aria-hidden="true"></div>
       <div class="srv-hero-inner">
         <div class="section-tag">服务项目</div>
         <h1 class="srv-hero-title">我们能为您<span class="gold">开发什么</span></h1>
         <p class="srv-hero-sub">无论您有怎样的想法，我们都有能力帮您把它变成真实可用的产品</p>
+        <div class="srv-hero-tags">
+          <span>需求澄清到上线全流程</span>
+          <span>技术方案与报价透明</span>
+          <span>支持长期维护迭代</span>
+        </div>
       </div>
     </section>
 
@@ -139,13 +145,31 @@ const steps = [
 </script>
 
 <style scoped>
-.page-top-pad { padding-top: 80px; }
 .srv-hero {
-  background: linear-gradient(135deg, #f8fafc 0%, var(--gold-bg) 100%);
+  position: relative;
+  overflow: hidden;
+  background: linear-gradient(145deg, #f7f8fa 0%, #fff5e5 100%);
   padding: 80px 32px;
   border-bottom: 1px solid var(--border);
 }
+.srv-hero-bg {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background:
+    radial-gradient(circle at 8% 18%, rgba(200,151,58,0.18), transparent 34%),
+    radial-gradient(circle at 88% 22%, rgba(59,130,246,0.12), transparent 34%),
+    repeating-linear-gradient(
+      92deg,
+      rgba(13,17,23,0.018) 0,
+      rgba(13,17,23,0.018) 1px,
+      transparent 1px,
+      transparent 8px
+    );
+  opacity: 0.75;
+}
 .srv-hero-inner { max-width: 700px; margin: 0 auto; text-align: center; }
+.srv-hero-inner { position: relative; z-index: 1; }
 .srv-hero-title {
   font-family: 'Noto Serif SC', serif;
   font-size: clamp(30px, 4vw, 48px);
@@ -153,6 +177,22 @@ const steps = [
 }
 .gold { color: var(--gold); }
 .srv-hero-sub { color: var(--ink-soft); font-size: 16px; }
+.srv-hero-tags {
+  margin-top: 18px;
+  display: flex;
+  justify-content: center;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+.srv-hero-tags span {
+  padding: 6px 12px;
+  border-radius: 999px;
+  background: rgba(253,246,232,0.85);
+  border: 1px solid rgba(200,151,58,0.35);
+  color: #6b5220;
+  font-size: 12px;
+  font-weight: 600;
+}
 
 .srv-detail { padding: 80px 32px; }
 .bg-alt { background: #f8fafc; }
@@ -172,7 +212,13 @@ const steps = [
 .srv-d-icon-bg {
   width: 220px; height: 220px; border-radius: 32px;
   display: flex; align-items: center; justify-content: center;
-  box-shadow: 0 20px 50px rgba(0,0,0,0.08);
+  box-shadow: 0 24px 54px rgba(13,17,23,0.1);
+  border: 1px solid rgba(255,255,255,0.6);
+  transition: transform 0.28s ease, box-shadow 0.28s ease;
+}
+.srv-detail-inner:hover .srv-d-icon-bg {
+  transform: translateY(-4px) rotate(-1deg);
+  box-shadow: 0 30px 66px rgba(13,17,23,0.14);
 }
 
 .section-tag {
@@ -228,12 +274,13 @@ const steps = [
 }
 .proc-step {
   flex: 1; min-width: 140px;
-  background: rgba(255,255,255,0.05);
+  background: rgba(255,255,255,0.06);
   border: 1px solid rgba(255,255,255,0.1);
   border-radius: 16px;
   padding: 24px 20px;
   position: relative;
   transition: all 0.3s;
+  backdrop-filter: blur(4px);
 }
 .proc-step:hover { background: rgba(200,151,58,0.1); border-color: rgba(200,151,58,0.3); }
 .proc-num {
@@ -246,7 +293,7 @@ const steps = [
   display: flex;
 }
 .proc-step h4 { color: #fff; font-size: 15px; font-weight: 700; margin-bottom: 6px; }
-.proc-step p { color: rgba(255,255,255,0.5); font-size: 13px; line-height: 1.6; }
+.proc-step p { color: rgba(255,255,255,0.74); font-size: 13px; line-height: 1.6; }
 .proc-arrow {
   position: absolute; right: -14px; top: 50%;
   transform: translateY(-50%);
@@ -254,7 +301,9 @@ const steps = [
 }
 
 .quote-cta {
-  background: linear-gradient(135deg, var(--gold-bg), #fff);
+  background:
+    radial-gradient(circle at 14% 78%, rgba(200,151,58,0.18), transparent 40%),
+    linear-gradient(135deg, var(--gold-bg), #fff);
   border-top: 1px solid rgba(200,151,58,0.2);
 }
 .qc-inner {
@@ -271,12 +320,20 @@ const steps = [
 
 .btn-primary {
   display: inline-flex; align-items: center;
-  background: var(--gold); color: #fff;
+  background: linear-gradient(135deg, var(--gold) 0%, var(--gold-lt) 100%);
+  color: #fff;
   padding: 12px 28px; border-radius: 10px;
   text-decoration: none; font-weight: 700; font-size: 15px;
-  transition: all 0.2s; border: 2px solid var(--gold);
+  transition: transform 0.2s ease, box-shadow 0.2s ease, filter 0.2s ease;
+  border: 2px solid var(--gold);
+  box-shadow: 0 12px 22px rgba(200,151,58,0.24);
 }
-.btn-primary:hover { background: var(--gold-lt); border-color: var(--gold-lt); transform: translateY(-2px); }
+.btn-primary:hover {
+  border-color: var(--gold-lt);
+  transform: translateY(-2px);
+  filter: saturate(1.05);
+  box-shadow: 0 18px 30px rgba(200,151,58,0.3);
+}
 .btn-primary.lg { padding: 15px 36px; font-size: 16px; }
 
 @media (max-width: 900px) {
@@ -288,5 +345,20 @@ const steps = [
   .srv-d-icon-bg { width: 140px; height: 140px; }
   .process-steps { gap: 12px; }
   .proc-arrow { display: none; }
+  .srv-hero-inner { text-align: left; }
+  .srv-hero-tags { justify-content: flex-start; }
+  .srv-hero-bg { opacity: 0.5; }
+  .proc-step { backdrop-filter: none; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .srv-hero-bg { display: none; }
+  .srv-d-icon-bg,
+  .srv-detail-inner:hover .srv-d-icon-bg,
+  .btn-primary,
+  .btn-primary:hover {
+    transition: none;
+    transform: none;
+  }
 }
 </style>

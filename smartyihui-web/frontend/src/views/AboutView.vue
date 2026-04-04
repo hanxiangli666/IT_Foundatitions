@@ -1,6 +1,7 @@
 <template>
   <div class="page-top-pad">
     <section class="about-hero">
+      <div class="about-hero-bg" aria-hidden="true"></div>
       <div class="ah-inner">
         <div class="section-tag">关于我们</div>
         <h1 class="ah-title">我们是<span class="gold">充满激情</span>的年轻技术团队</h1>
@@ -8,6 +9,11 @@
           广州熠辉智能科技有限公司成立于2026年，
           专注为企业和个人提供高质量软件开发服务。我们相信好的技术可以改变商业。
         </p>
+        <div class="ah-tags">
+          <span>100% 自主研发</span>
+          <span>合法合规签约</span>
+          <span>长期迭代维护</span>
+        </div>
       </div>
     </section>
 
@@ -101,14 +107,31 @@ const certs = [
 </script>
 
 <style scoped>
-.page-top-pad { padding-top: 80px; }
-
 .about-hero {
-  background: linear-gradient(135deg, var(--gold-bg) 0%, #fff 60%);
+  position: relative;
+  overflow: hidden;
+  background: linear-gradient(140deg, #faf8f3 0%, #fff 65%);
   border-bottom: 1px solid var(--border);
   padding: 80px 32px 80px;
 }
+.about-hero-bg {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  opacity: 0.8;
+  background:
+    radial-gradient(circle at 8% 14%, rgba(200,151,58,0.16), transparent 34%),
+    radial-gradient(circle at 88% 18%, rgba(59,130,246,0.12), transparent 34%),
+    repeating-linear-gradient(
+      96deg,
+      rgba(13,17,23,0.02) 0,
+      rgba(13,17,23,0.02) 1px,
+      transparent 1px,
+      transparent 7px
+    );
+}
 .ah-inner { max-width: 760px; margin: 0 auto; text-align: center; }
+.ah-inner { position: relative; z-index: 1; }
 .ah-title {
   font-family: 'Noto Serif SC', serif;
   font-size: clamp(30px, 4vw, 48px);
@@ -118,8 +141,26 @@ const certs = [
 }
 .gold { color: var(--gold); }
 .ah-sub { color: var(--ink-soft); font-size: 16px; line-height: 1.8; }
+.ah-tags {
+  margin-top: 20px;
+  display: flex;
+  justify-content: center;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+.ah-tags span {
+  padding: 6px 12px;
+  border-radius: 999px;
+  font-size: 12px;
+  font-weight: 600;
+  color: #6b5220;
+  border: 1px solid rgba(200,151,58,0.35);
+  background: rgba(253,246,232,0.8);
+}
 
-.about-values { background: #f8fafc; }
+.about-values {
+  background: linear-gradient(180deg, #f7f8fa 0%, #f2f4f7 100%);
+}
 .vals-grid {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
@@ -129,8 +170,13 @@ const certs = [
   background: #fff; border-radius: 18px;
   padding: 28px; border: 1px solid var(--border);
   transition: all 0.3s;
+  box-shadow: 0 10px 20px rgba(13,17,23,0.04);
 }
-.val-card:hover { transform: translateY(-4px); box-shadow: 0 12px 30px rgba(0,0,0,0.07); }
+.val-card:hover {
+  transform: translateY(-6px);
+  box-shadow: 0 16px 36px rgba(13,17,23,0.1);
+  border-color: rgba(200,151,58,0.28);
+}
 .val-icon {
   color: var(--gold);
   margin-bottom: 14px;
@@ -173,11 +219,12 @@ const certs = [
   gap: 16px;
 }
 .fact-card {
-  background: var(--gold-bg);
+  background: linear-gradient(180deg, var(--gold-bg), #fff);
   border: 1px solid rgba(200,151,58,0.2);
   border-radius: 16px;
   padding: 24px;
   text-align: center;
+  box-shadow: 0 8px 20px rgba(200,151,58,0.08);
 }
 .fact-num {
   font-size: 32px; font-weight: 800;
@@ -187,7 +234,9 @@ const certs = [
 }
 .fact-lbl { font-size: 13px; color: var(--ink-soft); }
 
-.about-certs { background: #f8fafc; }
+.about-certs {
+  background: linear-gradient(180deg, #f7f8fa 0%, #f3f5f8 100%);
+}
 .cert-list {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
@@ -200,8 +249,13 @@ const certs = [
   border: 1px solid var(--border);
   text-align: center;
   transition: all 0.3s;
+  box-shadow: 0 10px 20px rgba(13,17,23,0.04);
 }
-.cert-item:hover { border-color: var(--gold); box-shadow: 0 8px 24px rgba(200,151,58,0.1); }
+.cert-item:hover {
+  border-color: var(--gold);
+  box-shadow: 0 14px 30px rgba(200,151,58,0.14);
+  transform: translateY(-4px);
+}
 .cert-icon {
   color: var(--gold);
   margin-bottom: 12px;
@@ -215,15 +269,18 @@ const certs = [
   display: inline-flex; align-items: center;
   padding: 11px 22px; border-radius: 10px;
   text-decoration: none; font-weight: 700; font-size: 14px;
-  border: 2px solid var(--border);
+  border: 2px solid #d7dae0;
   color: var(--ink-soft);
-  transition: all 0.2s;
+  transition: transform 0.2s ease, border-color 0.2s ease, color 0.2s ease;
+  background: rgba(255,255,255,0.75);
 }
-.btn-outline:hover { border-color: var(--gold); color: var(--gold); }
+.btn-outline:hover { border-color: var(--gold); color: var(--gold); transform: translateY(-2px); }
 
 @media (max-width: 768px) {
   .story-grid { grid-template-columns: 1fr; gap: 32px; }
   .story-facts { grid-template-columns: 1fr 1fr; }
   .section-inner { padding: 60px 20px; }
+  .ah-tags { justify-content: flex-start; }
+  .ah-inner { text-align: left; }
 }
 </style>

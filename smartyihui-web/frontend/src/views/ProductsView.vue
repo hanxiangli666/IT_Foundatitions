@@ -126,8 +126,6 @@ const products = [
 </script>
 
 <style scoped>
-.page-top-pad { padding-top: 80px; }
-
 /* Hero */
 .prod-hero {
   background: linear-gradient(135deg, #f8fafc 0%, var(--gold-bg) 100%);

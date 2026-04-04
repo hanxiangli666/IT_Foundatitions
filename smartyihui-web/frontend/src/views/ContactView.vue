@@ -1,10 +1,16 @@
 <template>
   <div class="page-top-pad">
     <section class="contact-hero">
+      <div class="contact-hero-bg" aria-hidden="true"></div>
       <div class="ch-inner">
         <div class="section-tag">联系我们</div>
         <h1 class="ch-title">有项目想法？<br/><span class="gold">告诉我们</span></h1>
         <p class="ch-sub">我们通常在24小时内回复，期待与您的合作</p>
+        <div class="ch-tags">
+          <span>24小时内初次反馈</span>
+          <span>可签合同可开票</span>
+          <span>支持远程沟通评审</span>
+        </div>
       </div>
     </section>
 
@@ -70,6 +76,15 @@
               {{ submitting ? '发送中...' : submitOk ? '已发送 ✓' : '发送需求 →' }}
             </button>
             <p v-if="submitMsg" class="submit-msg" :class="{ success: submitOk }" role="alert">{{ submitMsg }}</p>
+
+            <div v-if="submitOk" class="submit-next" role="status" aria-live="polite">
+              <h3>下一步建议</h3>
+              <p>为了更快评估报价与周期，建议补充项目文档或直接进行 15 分钟需求沟通。</p>
+              <div class="submit-next-actions">
+                <a :href="siteUrl" target="_blank" rel="noopener noreferrer" class="next-btn secondary">访问官网</a>
+                <a :href="consultTelLink" class="next-btn primary">电话咨询</a>
+              </div>
+            </div>
           </form>
         </div>
       </div>
@@ -108,14 +123,17 @@
 
 <script setup>
 import { ref, reactive } from 'vue'
-import axios from 'axios'
 import SvgIcon from '@/components/SvgIcon.vue'
+import { apiClient } from '@/lib/api'
 
 const form = reactive({ name: '', phone: '', type: '', desc: '' })
 const submitting = ref(false)
 const submitMsg = ref('')
 const submitOk = ref(false)
 const phoneError = ref('')
+const siteUrl = 'https://www.smartyihui.com'
+const consultPhone = '13600000000'
+const consultTelLink = `tel:${consultPhone}`
 
 // 中国大陆手机号格式：1 开头，第二位 3-9，共 11 位
 const PHONE_RE = /^1[3-9]\d{9}$/
@@ -167,12 +185,8 @@ async function handleSubmit() {
   submitMsg.value = ''
 
   try {
-    // ── 对接后端接口(这里需要把接口按照格式填写好,我再接上去) ────────────────────────────────────────────
-    // 将下方 URL 替换为实际接口地址，例如：
-    //   POST https://www.smartyihui.com/api/contact
-    // 请求体字段：{ name, phone, type, desc }
-    // ────────────────────────────────────────────────────────────
-    await axios.post('/* TODO: 填入后端接口地址 */', {
+    const contactPath = import.meta.env.VITE_CONTACT_SUBMIT_PATH || '/api/contact'
+    await apiClient.post(contactPath, {
       name: form.name,
       phone: form.phone,
       type: form.type,
@@ -192,14 +206,31 @@ async function handleSubmit() {
 </script>
 
 <style scoped>
-.page-top-pad { padding-top: 80px; }
-
 .contact-hero {
-  background: linear-gradient(135deg, var(--gold-bg) 0%, #fff 60%);
+  position: relative;
+  overflow: hidden;
+  background: linear-gradient(145deg, #f7f8fa 0%, #fff5e6 100%);
   border-bottom: 1px solid var(--border);
   padding: 80px 32px;
 }
+.contact-hero-bg {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  opacity: 0.75;
+  background:
+    radial-gradient(circle at 9% 18%, rgba(200,151,58,0.2), transparent 34%),
+    radial-gradient(circle at 88% 18%, rgba(59,130,246,0.12), transparent 34%),
+    repeating-linear-gradient(
+      95deg,
+      rgba(13,17,23,0.018) 0,
+      rgba(13,17,23,0.018) 1px,
+      transparent 1px,
+      transparent 8px
+    );
+}
 .ch-inner { max-width: 700px; margin: 0 auto; text-align: center; }
+.ch-inner { position: relative; z-index: 1; }
 .ch-title {
   font-family: 'Noto Serif SC', serif;
   font-size: clamp(32px, 4vw, 52px);
@@ -208,6 +239,22 @@ async function handleSubmit() {
 }
 .gold { color: var(--gold); }
 .ch-sub { color: var(--ink-soft); font-size: 16px; }
+.ch-tags {
+  margin-top: 18px;
+  display: flex;
+  justify-content: center;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+.ch-tags span {
+  padding: 6px 12px;
+  border-radius: 999px;
+  border: 1px solid rgba(200,151,58,0.35);
+  background: rgba(253,246,232,0.85);
+  color: #6b5220;
+  font-size: 12px;
+  font-weight: 600;
+}
 
 .contact-main { background: #f8fafc; }
 .cm-inner {
@@ -274,16 +321,67 @@ async function handleSubmit() {
 .field-error { font-size: 12px; color: #e53e3e; margin-top: 2px; }
 
 .btn-submit-form {
-  background: var(--gold); color: #fff;
+  background: linear-gradient(135deg, var(--gold) 0%, var(--gold-lt) 100%);
+  color: #fff;
   border: none; cursor: pointer;
   padding: 14px; border-radius: 10px;
   font-size: 16px; font-weight: 700; font-family: inherit;
-  transition: all 0.2s;
+  transition: transform 0.2s ease, box-shadow 0.2s ease, filter 0.2s ease;
+  box-shadow: 0 12px 22px rgba(200,151,58,0.25);
 }
-.btn-submit-form:hover:not(:disabled) { background: var(--gold-lt); transform: translateY(-1px); }
+.btn-submit-form:hover:not(:disabled) {
+  transform: translateY(-2px);
+  filter: saturate(1.05);
+  box-shadow: 0 18px 30px rgba(200,151,58,0.3);
+}
 .btn-submit-form:disabled { opacity: 0.6; cursor: not-allowed; }
 .submit-msg { text-align: center; font-size: 14px; color: var(--ink-mute); }
 .submit-msg.success { color: #38a169; }
+.submit-next {
+  margin-top: 10px;
+  padding: 16px;
+  border-radius: 14px;
+  border: 1px solid rgba(56,161,105,0.35);
+  background: linear-gradient(180deg, rgba(236,253,245,0.92), rgba(255,255,255,0.95));
+}
+.submit-next h3 {
+  font-size: 15px;
+  font-weight: 700;
+  color: #1f7a4d;
+  margin-bottom: 6px;
+}
+.submit-next p {
+  font-size: 13px;
+  color: #2f6e4a;
+  line-height: 1.7;
+  margin-bottom: 12px;
+}
+.submit-next-actions {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+.next-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 8px 12px;
+  border-radius: 9px;
+  font-size: 13px;
+  font-weight: 700;
+  text-decoration: none;
+  transition: transform 0.2s ease, filter 0.2s ease;
+}
+.next-btn:hover { transform: translateY(-1px); filter: saturate(1.05); }
+.next-btn.primary {
+  background: linear-gradient(135deg, #1f9f63 0%, #38a169 100%);
+  color: #fff;
+}
+.next-btn.secondary {
+  border: 1px solid #9ec8b0;
+  color: #2f6e4a;
+  background: rgba(255,255,255,0.85);
+}
 
 /* FAQ */
 .section-inner {
@@ -334,5 +432,20 @@ async function handleSubmit() {
   .cm-inner { grid-template-columns: 1fr; gap: 32px; padding: 40px 20px; }
   .form-row { grid-template-columns: 1fr; }
   .section-inner { padding: 60px 20px; }
+  .ch-inner { text-align: left; }
+  .ch-tags { justify-content: flex-start; }
+  .contact-hero-bg { opacity: 0.5; }
+  .contact-form-wrap { box-shadow: 0 6px 14px rgba(13,17,23,0.05); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .contact-hero-bg { display: none; }
+  .btn-submit-form,
+  .btn-submit-form:hover,
+  .next-btn,
+  .next-btn:hover {
+    transition: none;
+    transform: none;
+  }
 }
 </style>

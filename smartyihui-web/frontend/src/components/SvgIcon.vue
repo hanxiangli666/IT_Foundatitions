@@ -45,6 +45,8 @@ const icons = {
   'chevron-up': `<polyline points="18 15 12 9 6 15"/>`,
   'chevron-down': `<polyline points="6 9 12 15 18 9"/>`,
   'message-square': `<path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>`,
+  sun: `<circle cx="12" cy="12" r="4"/><path d="M12 2v2"/><path d="M12 20v2"/><path d="m4.93 4.93 1.41 1.41"/><path d="m17.66 17.66 1.41 1.41"/><path d="M2 12h2"/><path d="M20 12h2"/><path d="m6.34 17.66-1.41 1.41"/><path d="m19.07 4.93-1.41 1.41"/>`,
+  moon: `<path d="M12 3a7.5 7.5 0 1 0 9 9A9 9 0 1 1 12 3z"/>`,
   x: `<line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>`,
 }
 </script>

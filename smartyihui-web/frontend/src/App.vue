@@ -19,6 +19,15 @@
         <div class="nav-actions">
           <button class="btn-login" @click="showLogin = true">登录 / 注册</button>
           <button
+            class="btn-theme"
+            type="button"
+            @click="toggleTheme"
+            :aria-label="themeButtonLabel"
+            :title="themeButtonLabel"
+          >
+            <SvgIcon :name="themeIcon" :size="16" />
+          </button>
+          <button
             class="hamburger"
             @click="menuOpen = !menuOpen"
             :aria-expanded="menuOpen"
@@ -31,13 +40,19 @@
       </div>
 
       <!-- 移动端菜单 -->
-      <div id="mobile-menu" class="mobile-menu" v-if="menuOpen">
-        <router-link to="/" @click="menuOpen = false">首页</router-link>
-        <router-link to="/about" @click="menuOpen = false">关于我们</router-link>
-        <router-link to="/services" @click="menuOpen = false">服务项目</router-link>
-        <router-link to="/products" @click="menuOpen = false">自研产品</router-link>
-        <router-link to="/contact" @click="menuOpen = false">联系方式</router-link>
-        <button class="btn-login-mobile" @click="showLogin = true; menuOpen = false">登录 / 注册</button>
+      <transition name="menu-drop">
+        <div id="mobile-menu" class="mobile-menu" v-if="menuOpen">
+          <router-link to="/" @click="menuOpen = false">首页</router-link>
+          <router-link to="/about" @click="menuOpen = false">关于我们</router-link>
+          <router-link to="/services" @click="menuOpen = false">服务项目</router-link>
+          <router-link to="/products" @click="menuOpen = false">自研产品</router-link>
+          <router-link to="/contact" @click="menuOpen = false">联系方式</router-link>
+          <button class="btn-login-mobile" @click="showLogin = true; menuOpen = false">登录 / 注册</button>
+        </div>
+      </transition>
+
+      <div class="scroll-progress" aria-hidden="true">
+        <span class="scroll-progress-bar" :style="{ transform: `scaleX(${scrollProgress})` }"></span>
       </div>
     </header>
 
@@ -129,8 +144,9 @@
 </template>
 
 <script setup>
-import { ref, onMounted, onUnmounted } from 'vue'
+import { ref, onMounted, onUnmounted, watch, computed } from 'vue'
 import axios from 'axios'
+import { useRoute } from 'vue-router'
 import SvgIcon from '@/components/SvgIcon.vue'
 
 const isScrolled = ref(false)
@@ -141,6 +157,11 @@ const authLoading = ref(false)
 const authError = ref('')
 const authSuccess = ref('')
 const smsCooldown = ref(0)
+const themeMode = ref('system')
+const resolvedTheme = ref('light')
+const scrollProgress = ref(0)
+const route = useRoute()
+let systemThemeMedia = null
 
 const loginForm = ref({ username: '', password: '' })
 const registerForm = ref({ username: '', password: '', phone: '', verifyCode: '' })
@@ -148,11 +169,89 @@ const registerForm = ref({ username: '', password: '', phone: '', verifyCode: ''
 const SSO_BASE = 'https://www.smartyihui.com/api/sso'
 
 function handleScroll() {
-  isScrolled.value = window.scrollY > 40
+  const doc = document.documentElement
+  const scrollTop = window.scrollY || doc.scrollTop || 0
+  const scrollable = doc.scrollHeight - doc.clientHeight
+
+  isScrolled.value = scrollTop > 40
+  scrollProgress.value = scrollable > 0 ? Math.min(1, Math.max(0, scrollTop / scrollable)) : 0
 }
 
-onMounted(() => window.addEventListener('scroll', handleScroll))
-onUnmounted(() => window.removeEventListener('scroll', handleScroll))
+const themeOrder = ['light', 'dark', 'system']
+
+const themeIcon = computed(() => {
+  if (themeMode.value === 'system') return 'monitor'
+  return themeMode.value === 'dark' ? 'moon' : 'sun'
+})
+
+const themeLabelMap = {
+  light: '白天模式',
+  dark: '黑夜模式',
+  system: '跟随系统',
+}
+
+const themeButtonLabel = computed(() => {
+  const idx = themeOrder.indexOf(themeMode.value)
+  const nextMode = themeOrder[(idx + 1) % themeOrder.length]
+  const currentLabel = themeLabelMap[themeMode.value]
+  const nextLabel = themeLabelMap[nextMode]
+  return `当前${currentLabel}，点击切换到${nextLabel}`
+})
+
+function getResolvedTheme(mode) {
+  if (mode === 'light' || mode === 'dark') return mode
+  return systemThemeMedia?.matches ? 'dark' : 'light'
+}
+
+function applyTheme(mode) {
+  themeMode.value = themeOrder.includes(mode) ? mode : 'system'
+  resolvedTheme.value = getResolvedTheme(themeMode.value)
+  document.body.classList.toggle('dark-theme', resolvedTheme.value === 'dark')
+  localStorage.setItem('theme-mode', themeMode.value)
+}
+
+function toggleTheme() {
+  const idx = themeOrder.indexOf(themeMode.value)
+  applyTheme(themeOrder[(idx + 1) % themeOrder.length])
+}
+
+function handleSystemThemeChange() {
+  if (themeMode.value === 'system') {
+    resolvedTheme.value = getResolvedTheme('system')
+    document.body.classList.toggle('dark-theme', resolvedTheme.value === 'dark')
+  }
+}
+
+onMounted(() => {
+  systemThemeMedia = window.matchMedia('(prefers-color-scheme: dark)')
+  if (typeof systemThemeMedia.addEventListener === 'function') {
+    systemThemeMedia.addEventListener('change', handleSystemThemeChange)
+  } else if (typeof systemThemeMedia.addListener === 'function') {
+    systemThemeMedia.addListener(handleSystemThemeChange)
+  }
+
+  const savedTheme = localStorage.getItem('theme-mode')
+  if (savedTheme === 'dark' || savedTheme === 'light' || savedTheme === 'system') {
+    applyTheme(savedTheme)
+  } else {
+    applyTheme('system')
+  }
+  handleScroll()
+  window.addEventListener('scroll', handleScroll)
+})
+onUnmounted(() => {
+  window.removeEventListener('scroll', handleScroll)
+  if (!systemThemeMedia) return
+  if (typeof systemThemeMedia.removeEventListener === 'function') {
+    systemThemeMedia.removeEventListener('change', handleSystemThemeChange)
+  } else if (typeof systemThemeMedia.removeListener === 'function') {
+    systemThemeMedia.removeListener(handleSystemThemeChange)
+  }
+})
+
+watch(() => route.fullPath, () => {
+  menuOpen.value = false
+})
 
 async function handleLogin() {
   authError.value = ''
@@ -201,43 +300,19 @@ async function sendSms() {
 </script>
 
 <style>
-@import url('https://fonts.googleapis.com/css2?family=Noto+Serif+SC:wght@400;600;700&family=DM+Sans:wght@300;400;500;600&display=swap');
-
-*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-
-:root {
-  --ink: #0d1117;
-  --ink-soft: #3d4450;
-  --ink-mute: #7a8394;
-  --gold: #c8973a;
-  --gold-lt: #e8b84b;
-  --gold-bg: #fdf6e8;
-  --surface: #ffffff;
-  --border: #e8eaed;
-  --radius: 12px;
-}
-
-html { scroll-behavior: smooth; }
-body {
-  font-family: 'DM Sans', 'PingFang SC', 'Microsoft YaHei', sans-serif;
-  color: var(--ink);
-  background: var(--surface);
-  line-height: 1.6;
-}
-
 .site-root { min-height: 100vh; display: flex; flex-direction: column; }
 main { flex: 1; }
 
 /* ── NAVBAR ── */
 .navbar {
   position: fixed; top: 0; left: 0; right: 0; z-index: 100;
-  transition: background 0.3s, box-shadow 0.3s;
+  transition: background 0.3s, box-shadow 0.3s, backdrop-filter 0.3s;
   background: transparent;
 }
 .navbar.scrolled {
-  background: rgba(255,255,255,0.96);
-  box-shadow: 0 1px 0 var(--border);
-  backdrop-filter: blur(12px);
+  background: rgba(255,255,255,0.88);
+  box-shadow: 0 16px 32px rgba(13, 17, 23, 0.06), 0 1px 0 var(--border);
+  backdrop-filter: blur(16px);
 }
 .navbar-inner {
   max-width: 1200px; margin: 0 auto;
@@ -268,21 +343,60 @@ main { flex: 1; }
   text-decoration: none; color: var(--ink-soft);
   padding: 8px 14px; border-radius: 8px;
   font-size: 15px; font-weight: 500;
-  transition: all 0.2s;
+  transition: all 0.24s ease;
+  position: relative;
 }
 .nav-links a:hover, .nav-links a.router-link-active {
   color: var(--gold); background: var(--gold-bg);
 }
+.nav-links a::after {
+  content: '';
+  position: absolute;
+  left: 14px;
+  right: 14px;
+  bottom: 4px;
+  height: 2px;
+  background: var(--gold);
+  transform: scaleX(0);
+  transform-origin: center;
+  transition: transform 0.24s ease;
+}
+.nav-links a:hover::after,
+.nav-links a.router-link-active::after {
+  transform: scaleX(1);
+}
 .nav-actions { margin-left: auto; display: flex; align-items: center; gap: 12px; }
 .btn-login {
-  background: var(--gold); color: #fff;
+  background: linear-gradient(135deg, var(--gold) 0%, var(--gold-lt) 100%); color: #fff;
   border: none; cursor: pointer;
   padding: 9px 22px; border-radius: 8px;
   font-size: 14px; font-weight: 600;
   font-family: inherit;
-  transition: background 0.2s, transform 0.15s;
+  transition: transform 0.2s ease, box-shadow 0.2s ease, filter 0.2s ease;
+  box-shadow: 0 10px 18px rgba(200, 151, 58, 0.24);
 }
-.btn-login:hover { background: var(--gold-lt); transform: translateY(-1px); }
+.btn-login:hover { transform: translateY(-2px); filter: saturate(1.08); box-shadow: 0 14px 24px rgba(200, 151, 58, 0.3); }
+.btn-login:active { transform: translateY(0); }
+.btn-theme {
+  width: 38px;
+  height: 38px;
+  border-radius: 10px;
+  border: 1px solid var(--border);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(255,255,255,0.82);
+  color: var(--ink-soft);
+  cursor: pointer;
+  transition: transform 0.2s ease, border-color 0.2s ease, color 0.2s ease, background 0.2s ease, box-shadow 0.2s ease;
+}
+.btn-theme:hover {
+  color: var(--gold);
+  border-color: rgba(200,151,58,0.45);
+  background: var(--gold-bg);
+  transform: translateY(-1px);
+  box-shadow: 0 8px 16px rgba(13,17,23,0.12);
+}
 .hamburger {
   display: none; flex-direction: column; gap: 5px;
   background: none; border: none; cursor: pointer; padding: 4px;
@@ -296,6 +410,7 @@ main { flex: 1; }
   padding: 12px 24px 20px;
   background: rgba(255,255,255,0.98);
   border-top: 1px solid var(--border);
+  box-shadow: inset 0 1px 0 rgba(255,255,255,0.7), 0 14px 24px rgba(13, 17, 23, 0.08);
 }
 .mobile-menu a {
   text-decoration: none; color: var(--ink-soft);
@@ -304,10 +419,30 @@ main { flex: 1; }
 }
 .mobile-menu a:hover { background: var(--gold-bg); color: var(--gold); }
 .btn-login-mobile {
-  margin-top: 8px; background: var(--gold); color: #fff;
+  margin-top: 8px; background: linear-gradient(135deg, var(--gold) 0%, var(--gold-lt) 100%); color: #fff;
   border: none; cursor: pointer;
   padding: 12px; border-radius: 8px;
   font-size: 15px; font-weight: 600; font-family: inherit;
+}
+.btn-login-mobile:active { transform: translateY(1px); }
+
+.scroll-progress {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  height: 3px;
+  background: rgba(13, 17, 23, 0.08);
+  overflow: hidden;
+}
+.scroll-progress-bar {
+  display: block;
+  width: 100%;
+  height: 100%;
+  transform-origin: left center;
+  transform: scaleX(0);
+  background: linear-gradient(90deg, #c8973a 0%, #e8b84b 100%);
+  transition: transform 0.08s linear;
 }
 
 /* ── FOOTER ── */
@@ -398,22 +533,93 @@ main { flex: 1; }
 .btn-sms:disabled { opacity: 0.5; cursor: not-allowed; }
 
 .btn-submit {
-  background: var(--gold); color: #fff;
+  background: linear-gradient(135deg, var(--gold) 0%, var(--gold-lt) 100%); color: #fff;
   border: none; cursor: pointer;
   padding: 13px; border-radius: 10px;
   font-size: 16px; font-weight: 700; font-family: inherit;
   transition: all 0.2s; margin-top: 4px;
+  box-shadow: 0 10px 18px rgba(200, 151, 58, 0.22);
 }
-.btn-submit:hover:not(:disabled) { background: var(--gold-lt); transform: translateY(-1px); }
+.btn-submit:hover:not(:disabled) { transform: translateY(-2px); box-shadow: 0 14px 22px rgba(200, 151, 58, 0.28); }
 .btn-submit:disabled { opacity: 0.6; cursor: not-allowed; }
 .auth-error { color: #e53e3e; font-size: 14px; text-align: center; }
 .auth-success { color: #38a169; font-size: 14px; text-align: center; }
+
+body.dark-theme .navbar.scrolled {
+  background: rgba(11, 18, 28, 0.9);
+  box-shadow: 0 16px 32px rgba(0, 0, 0, 0.28), 0 1px 0 var(--border);
+}
+body.dark-theme .brand,
+body.dark-theme .nav-links a,
+body.dark-theme .btn-theme,
+body.dark-theme .mobile-menu a {
+  color: var(--ink-soft);
+}
+body.dark-theme .nav-links a:hover,
+body.dark-theme .nav-links a.router-link-active,
+body.dark-theme .mobile-menu a:hover {
+  color: var(--gold);
+  background: rgba(212, 172, 102, 0.18);
+}
+body.dark-theme .hamburger span {
+  background: var(--ink-soft);
+}
+body.dark-theme .mobile-menu {
+  background: rgba(11, 18, 28, 0.96);
+  border-top-color: var(--border);
+}
+body.dark-theme .btn-theme {
+  background: rgba(14, 22, 34, 0.85);
+  border-color: #36445c;
+}
+body.dark-theme .btn-theme:hover {
+  background: rgba(212, 172, 102, 0.2);
+}
+body.dark-theme .scroll-progress {
+  background: rgba(231, 237, 247, 0.08);
+}
+body.dark-theme .scroll-progress-bar {
+  background: linear-gradient(90deg, #d4ac66 0%, #f0cb89 100%);
+}
+body.dark-theme .modal-overlay {
+  background: rgba(5, 8, 13, 0.7);
+}
+body.dark-theme .modal-box {
+  background: #111a28;
+}
+body.dark-theme .field label,
+body.dark-theme .modal-tabs button,
+body.dark-theme .modal-close {
+  color: var(--ink-soft);
+}
+body.dark-theme .modal-tabs button.active {
+  background: #172234;
+}
+body.dark-theme .modal-close:hover {
+  background: #1c2738;
+}
 
 @media (max-width: 768px) {
   .nav-links { display: none; }
   .hamburger { display: flex; }
   .navbar-inner { padding: 16px 20px; }
   .btn-login { display: none; }
+  .btn-theme { width: 36px; height: 36px; }
+  .scroll-progress { height: 2px; }
+  .navbar.scrolled {
+    backdrop-filter: none;
+    box-shadow: 0 8px 16px rgba(13,17,23,0.06), 0 1px 0 var(--border);
+  }
+  .modal-overlay { backdrop-filter: none; }
+  .modal-box { box-shadow: 0 14px 28px rgba(13,17,23,0.18); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .navbar,
+  .modal-box,
+  .btn-login,
+  .btn-submit { transition: none !important; }
+  .scroll-progress-bar { transition: none !important; }
 }
 
 /* ── PAGE TRANSITION ── */
@@ -426,6 +632,16 @@ main { flex: 1; }
   transform: translateY(8px);
 }
 .page-leave-to {
+  opacity: 0;
+  transform: translateY(-8px);
+}
+
+.menu-drop-enter-active,
+.menu-drop-leave-active {
+  transition: opacity 0.2s ease, transform 0.2s ease;
+}
+.menu-drop-enter-from,
+.menu-drop-leave-to {
   opacity: 0;
   transform: translateY(-8px);
 }

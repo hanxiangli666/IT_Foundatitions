@@ -12,6 +12,7 @@
           <router-link to="/">首页</router-link>
           <router-link to="/about">关于我们</router-link>
           <router-link to="/services">服务项目</router-link>
+          <router-link to="/products">自研产品</router-link>
           <router-link to="/contact">联系方式</router-link>
         </nav>
 
@@ -34,6 +35,7 @@
         <router-link to="/" @click="menuOpen = false">首页</router-link>
         <router-link to="/about" @click="menuOpen = false">关于我们</router-link>
         <router-link to="/services" @click="menuOpen = false">服务项目</router-link>
+        <router-link to="/products" @click="menuOpen = false">自研产品</router-link>
         <router-link to="/contact" @click="menuOpen = false">联系方式</router-link>
         <button class="btn-login-mobile" @click="showLogin = true; menuOpen = false">登录 / 注册</button>
       </div>

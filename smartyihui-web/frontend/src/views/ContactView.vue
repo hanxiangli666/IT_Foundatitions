@@ -195,19 +195,19 @@ async function handleSubmit() {
 .page-top-pad { padding-top: 80px; }
 
 .contact-hero {
-  background: linear-gradient(135deg, var(--ink) 0%, #1a2d4a 100%);
+  background: linear-gradient(135deg, var(--gold-bg) 0%, #fff 60%);
+  border-bottom: 1px solid var(--border);
   padding: 80px 32px;
 }
 .ch-inner { max-width: 700px; margin: 0 auto; text-align: center; }
-.ch-inner .section-tag { background: rgba(200,151,58,0.2); }
 .ch-title {
   font-family: 'Noto Serif SC', serif;
   font-size: clamp(32px, 4vw, 52px);
-  font-weight: 700; color: #fff;
+  font-weight: 700; color: var(--ink);
   margin: 16px 0 16px; line-height: 1.3;
 }
 .gold { color: var(--gold); }
-.ch-sub { color: rgba(255,255,255,0.6); font-size: 16px; }
+.ch-sub { color: var(--ink-soft); font-size: 16px; }
 
 .contact-main { background: #f8fafc; }
 .cm-inner {
